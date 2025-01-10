@@ -1,0 +1,14 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:6000/transaction-service
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+
+  application:
+    name: transaction-service

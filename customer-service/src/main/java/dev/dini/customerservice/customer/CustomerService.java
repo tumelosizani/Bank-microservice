@@ -1,5 +1,7 @@
 package dev.dini.customerservice.customer;
 
+import dev.dini.customerservice.dto.CustomerResponseDTO;
+
 import java.util.List;
 
 public interface CustomerService {
@@ -7,11 +9,11 @@ public interface CustomerService {
 
     void updateCustomer(CustomerRequest request);
 
-    List<CustomerResponse> findAllCustomers();
+    List<CustomerResponseDTO> findAllCustomers();
 
-    CustomerResponse findById(String id);
+    CustomerResponseDTO findById(Integer customerId);
 
-    boolean existsById(String id);
+    boolean existsById(Integer customerId);
 
-    void deleteCustomer(String id);
+    void deleteCustomer(Integer customerId);
 }

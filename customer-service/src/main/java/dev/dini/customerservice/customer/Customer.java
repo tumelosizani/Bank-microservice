@@ -1,22 +1,23 @@
 package dev.dini.customerservice.customer;
 
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Getter
 @Setter
-@Document
+@Entity
+@Table(name = "customer")
 public class Customer {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private String customerId;
     private String firstname;
     private String lastname;
     private String email;
+
     private Address address;
     private String idNumber; // National ID or Passport number
     private String idDocumentUrl; // URL to ID document (e.g., scanned image)

@@ -1,4 +1,4 @@
-package dev.dini.Transaction_Service.transaction;
+package dev.dini.transaction.service.transaction;
 
 public enum TransactionStatus {
     PENDING, COMPLETED, FAILED, CANCELLED

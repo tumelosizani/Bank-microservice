@@ -1,21 +1,19 @@
 package dev.dini.customerservice.customer;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.persistence.Embeddable;
+import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.validation.annotation.Validated;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 @Getter
 @Setter
-@Validated
+@Data
+@Embeddable
 public class Address {
 
     private String street;
-    private String houseNumber;
-    private String zipCode;
+    private String city;
+    private String state;
+    private String postalCode;
+    private String country;
 }
