@@ -2,6 +2,7 @@ package dev.dini.customerservice.customer;
 
 import java.util.List;
 
+import dev.dini.customerservice.dto.CustomerResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/customers")
-@RequiredArgsConstructor
 public class CustomerController {
 
     private final CustomerService customerService;
+
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
 
     @PostMapping
     public ResponseEntity<String> createCustomer(
@@ -37,27 +41,27 @@ public class CustomerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerResponse>> findAll() {
+    public ResponseEntity<List<CustomerResponseDTO>> findAll() {
         return ResponseEntity.ok(this.customerService.findAllCustomers());
     }
 
     @GetMapping("/exists/{customer-id}")
     public ResponseEntity<Boolean> existsById(
-            @PathVariable("customer-id") String customerId
+            @PathVariable("customer-id") Integer customerId
     ) {
         return ResponseEntity.ok(this.customerService.existsById(customerId));
     }
 
     @GetMapping("/{customer-id}")
-    public ResponseEntity<CustomerResponse> findById(
-            @PathVariable("customer-id") String customerId
+    public ResponseEntity<CustomerResponseDTO> findById(
+            @PathVariable("customer-id") Integer customerId
     ) {
         return ResponseEntity.ok(this.customerService.findById(customerId));
     }
 
     @DeleteMapping("/{customer-id}")
     public ResponseEntity<Void> delete(
-            @PathVariable("customer-id") String customerId
+            @PathVariable("customer-id") Integer customerId
     ) {
         this.customerService.deleteCustomer(customerId);
         return ResponseEntity.accepted().build();

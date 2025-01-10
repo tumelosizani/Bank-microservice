@@ -1,10 +1,10 @@
 package dev.dini.customerservice.customer;
 
+import dev.dini.customerservice.dto.CustomerResponseDTO;
 import dev.dini.customerservice.exception.CustomerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang.StringUtils;
-
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,23 +13,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
-    private final CustomerRepository repository;
+    private final CustomerRepository customerRepository;
     private final CustomerMapper mapper;
 
     @Override
-    public String createCustomer(CustomerRequest request) {
-        var customer = this.repository.save(mapper.toCustomer(request));
-        return customer.getId();
+    public String createCustomer(CustomerRequest customerRequest) {
+        var customer = this.customerRepository.save(mapper.toEntity(customerRequest));
+        return customer.getCustomerId();
     }
 
     @Override
     public void updateCustomer(CustomerRequest request) {
-        var customer = this.repository.findById(request.id())
+        var customer = this.customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new CustomerNotFoundException(
-                        String.format("Cannot update customer:: No customer found with the provided ID: %s", request.id())
+                        String.format("Cannot update customer:: No customer found with the provided ID: %s", request.getId())
                 ));
         mergeCustomer(customer, request);
-        this.repository.save(customer);
+        this.customerRepository.save(customer);
     }
 
     private void mergeCustomer(Customer customer, CustomerRequest request) {
@@ -45,31 +45,28 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public List<CustomerResponse> findAllCustomers() {
-        return  this.repository.findAll()
+    public List<CustomerResponseDTO> findAllCustomers() {
+        return this.customerRepository.findAll()
                 .stream()
-                .map(this.mapper::fromCustomer)
+                .map(this.mapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public CustomerResponse findById(String id) {
-        return this.repository.findById(id)
-                .map(mapper::fromCustomer)
-                .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", id)));
+    public CustomerResponseDTO findById(Integer customerId) {
+        return this.customerRepository.findById(customerId)
+                .map(mapper::toResponseDTO)
+                .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", customerId)));
     }
 
     @Override
-    public boolean existsById(String id) {
-        return this.repository.findById(id)
+    public boolean existsById(Integer customerId) {
+        return this.customerRepository.findById(customerId)
                 .isPresent();
     }
 
     @Override
-    public void deleteCustomer(String id) {
-        this.repository.deleteById(id);
+    public void deleteCustomer(Integer customerId) {
+        this.customerRepository.deleteById(customerId);
     }
-
-
-
 }

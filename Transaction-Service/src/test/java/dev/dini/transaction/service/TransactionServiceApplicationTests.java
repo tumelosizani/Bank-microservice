@@ -1,4 +1,4 @@
-package dev.dini.Transaction_Service;
+package dev.dini.transaction.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

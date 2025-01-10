@@ -1,11 +1,13 @@
-package dev.dini.Transaction_Service;
+package dev.dini.transaction.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
-@EnableEurekaServer
+@EnableFeignClients
+@EnableJpaAuditing
 public class TransactionServiceApplication {
 
 	public static void main(String[] args) {
