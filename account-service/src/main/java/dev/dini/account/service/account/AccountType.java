@@ -1,4 +1,4 @@
-package dev.dini.account_service.account;
+package dev.dini.account.service.account;
 
 public enum AccountType {
     SAVINGS, CHECKING, CREDIT, LOAN, BUSINESS

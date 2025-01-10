@@ -1,4 +1,4 @@
-package dev.dini.account_service.account;
+package dev.dini.account.service.account;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

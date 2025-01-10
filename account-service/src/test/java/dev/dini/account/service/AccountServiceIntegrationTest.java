@@ -1,11 +1,11 @@
-package dev.dini.account_service;
+package dev.dini.account.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.dini.account_service.account.Account;
-import dev.dini.account_service.account.AccountRepository;
-import dev.dini.account_service.account.AccountService;
-import dev.dini.account_service.account.AccountType;
-import dev.dini.account_service.account.CreateAccountRequest;
+import dev.dini.account.service.account.Account;
+import dev.dini.account.service.account.AccountRepository;
+import dev.dini.account.service.account.AccountService;
+import dev.dini.account.service.account.AccountType;
+import dev.dini.account.service.dto.CreateAccountRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,7 +37,7 @@ public class AccountServiceIntegrationTest {
     @Test
     public void testCreateAccount() throws Exception {
         // Arrange: Create the request body for the new account
-        CreateAccountRequest request = new CreateAccountRequest();
+        CreateAccountRequestDTO request = new CreateAccountRequestDTO();
         request.setUserId(12345); // Ensuring userId is an Integer
         request.setAccountType(AccountType.SAVINGS);
 
@@ -99,7 +99,7 @@ public class AccountServiceIntegrationTest {
     @Test
     public void testCreateAccountWithInvalidData() throws Exception {
         // Arrange: Create a request body with invalid data (e.g., missing userId or invalid accountType)
-        CreateAccountRequest request = new CreateAccountRequest();
+        CreateAccountRequestDTO request = new CreateAccountRequestDTO();
         request.setUserId(null); // Invalid userId
         request.setAccountType(null); // Invalid accountType
 

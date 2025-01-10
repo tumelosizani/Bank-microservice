@@ -1,4 +1,4 @@
-package dev.dini.account_service;
+package dev.dini.account.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
