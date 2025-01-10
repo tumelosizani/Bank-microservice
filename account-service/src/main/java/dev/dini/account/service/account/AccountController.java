@@ -1,5 +1,7 @@
-package dev.dini.account_service.account;
+package dev.dini.account.service.account;
 
+import dev.dini.account.service.dto.AccountRequestDTO;
+import dev.dini.account.service.dto.CreateAccountRequestDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +19,8 @@ public class AccountController {
 
     // Endpoint to create a new account
     @PostMapping
-    public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequest request) {
-        Account createdAccount = accountService.createAccount(request.getUserId(), request.getAccountType());
+    public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequestDTO createAccountRequestDTO) {
+        Account createdAccount = accountService.createAccount(createAccountRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
     }
 
@@ -31,7 +33,7 @@ public class AccountController {
 
     // Endpoint to update account details
     @PutMapping("/{accountId}")
-    public ResponseEntity<Account> updateAccount(@PathVariable Integer accountId, @RequestBody Account updatedAccount) {
+    public ResponseEntity<Account> updateAccount(@PathVariable Integer accountId, @RequestBody AccountRequestDTO updatedAccount) {
         Account account = accountService.updateAccount(accountId, updatedAccount);
         return ResponseEntity.ok(account);
     }
@@ -50,4 +52,3 @@ public class AccountController {
         return ResponseEntity.noContent().build();
     }
 }
-
