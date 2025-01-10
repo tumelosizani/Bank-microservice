@@ -1,0 +1,8 @@
+eureka:
+  client:
+    registerWithEureka: false  # AccountService does not register itself as a client
+    fetchRegistry: false  # AccountService does not fetch other service information
+  server:
+    enableSelfPreservation: false  # Disable self-preservation for demo purposes
+server:
+  port: 8090
