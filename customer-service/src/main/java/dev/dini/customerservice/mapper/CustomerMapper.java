@@ -11,9 +11,6 @@ import org.mapstruct.factory.Mappers;
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {
 
-    // Automatically generates the mapper instance for this interface
-    CustomerMapper INSTANCE = Mappers.getMapper(CustomerMapper.class);
-
     // Map Customer to CustomerResponseDTO
     CustomerResponseDTO toResponseDTO(Customer customer);
 
