@@ -4,4 +4,3 @@ spring:
 
     application:
       name: discovery-service
-

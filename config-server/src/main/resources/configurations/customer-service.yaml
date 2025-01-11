@@ -1,20 +1,16 @@
+server:
+  port: 8090
 spring:
-  application:
-    name: account-service
-
   profiles:
     active: default
-  config:
-    import: optional:configserver:http://localhost:8888
-
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6000/account-service
+    url: jdbc:postgresql://localhost:6000/customer-service
     username: tumelosizani
     password: tumelosizani
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   flyway:
@@ -25,6 +21,3 @@ spring:
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
 
-application:
-  config:
-    transaction-url: "http://localhost:8085"
