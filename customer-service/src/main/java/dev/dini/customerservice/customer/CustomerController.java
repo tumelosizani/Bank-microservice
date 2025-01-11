@@ -1,22 +1,18 @@
 package dev.dini.customerservice.customer;
 
+import dev.dini.customerservice.dto.CustomerResponseDTO;
+import dev.dini.customerservice.dto.CreateCustomerDTO;
+import dev.dini.customerservice.dto.UpdateCustomerDTO;
+import dev.dini.customerservice.exception.CustomerNotFoundException;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
-import dev.dini.customerservice.dto.CustomerResponseDTO;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 @RestController
-@RequestMapping("/api/v1/customers")
+@RequestMapping("/api/customers")
 public class CustomerController {
 
     private final CustomerService customerService;
@@ -25,45 +21,47 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
+    // Create a new customer
     @PostMapping
-    public ResponseEntity<String> createCustomer(
-            @RequestBody @Valid CustomerRequest request
-    ) {
-        return ResponseEntity.ok(this.customerService.createCustomer(request));
+    public ResponseEntity<Integer> createCustomer(@RequestBody @Valid CreateCustomerDTO createCustomerDTO) {
+        Integer customerId = customerService.createCustomer(createCustomerDTO);
+        return new ResponseEntity<>(customerId, HttpStatus.CREATED);
     }
 
-    @PutMapping
-    public ResponseEntity<Void> updateCustomer(
-            @RequestBody @Valid CustomerRequest request
-    ) {
-        this.customerService.updateCustomer(request);
-        return ResponseEntity.accepted().build();
+    // Update an existing customer
+    @PutMapping("/{customerId}")
+    public ResponseEntity<Void> updateCustomer(@PathVariable Integer customerId,
+                                               @RequestBody @Valid UpdateCustomerDTO updateCustomerDTO) {
+        // You may want to check if the customer exists first or include the ID in the update DTO
+        if (!customerService.existsById(customerId)) {
+            throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
+        }
+        updateCustomerDTO.setCustomerId(customerId);
+        customerService.updateCustomer(updateCustomerDTO);
+        return ResponseEntity.noContent().build(); // No content as the response
     }
 
+    // Get all customers
     @GetMapping
-    public ResponseEntity<List<CustomerResponseDTO>> findAll() {
-        return ResponseEntity.ok(this.customerService.findAllCustomers());
+    public ResponseEntity<List<CustomerResponseDTO>> getAllCustomers() {
+        List<CustomerResponseDTO> customers = customerService.findAllCustomers();
+        return ResponseEntity.ok(customers);
     }
 
-    @GetMapping("/exists/{customer-id}")
-    public ResponseEntity<Boolean> existsById(
-            @PathVariable("customer-id") Integer customerId
-    ) {
-        return ResponseEntity.ok(this.customerService.existsById(customerId));
+    // Get a customer by ID
+    @GetMapping("/{customerId}")
+    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Integer customerId) {
+        CustomerResponseDTO customer = customerService.findById(customerId);
+        return ResponseEntity.ok(customer);
     }
 
-    @GetMapping("/{customer-id}")
-    public ResponseEntity<CustomerResponseDTO> findById(
-            @PathVariable("customer-id") Integer customerId
-    ) {
-        return ResponseEntity.ok(this.customerService.findById(customerId));
-    }
-
-    @DeleteMapping("/{customer-id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable("customer-id") Integer customerId
-    ) {
-        this.customerService.deleteCustomer(customerId);
-        return ResponseEntity.accepted().build();
+    // Delete a customer
+    @DeleteMapping("/{customerId}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Integer customerId) {
+        if (!customerService.existsById(customerId)) {
+            throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
+        }
+        customerService.deleteCustomer(customerId);
+        return ResponseEntity.noContent().build(); // No content as the response
     }
 }

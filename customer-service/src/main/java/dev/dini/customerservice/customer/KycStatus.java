@@ -1,5 +1,5 @@
 package dev.dini.customerservice.customer;
 
-enum KycStatus {
+public enum KycStatus {
     PENDING, VERIFIED, FAILED
 }

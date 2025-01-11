@@ -2,17 +2,26 @@ package dev.dini.customerservice.customer;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-public record CustomerRequest(
-        Integer customerId,
+@Getter
+@Setter
+@Builder
+@Data
+public class CustomerRequest {
+
+        private Integer customerId;
+
         @NotNull(message = "Customer firstname is required")
-        String firstname,
+        private String firstname;
         @NotNull(message = "Customer firstname is required")
-        String lastname,
+        private String lastname;
         @NotNull(message = "Customer Email is required")
         @Email(message = "Customer Email is not a valid email address")
-        String email,
-        Address address
-) {
+        private String email;
+        private Address address;
 
 }
