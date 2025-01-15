@@ -37,7 +37,7 @@ public class CustomerController {
     @PutMapping("/{customerId}")
     public ResponseEntity<Void> updateCustomer(@PathVariable Integer customerId,
                                                @RequestBody @Valid UpdateCustomerDTO updateCustomerDTO) {
-        if (customerService.existsByCustomerId(customerId)) {
+        if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
         updateCustomerDTO.setCustomerId(customerId);
@@ -62,7 +62,7 @@ public class CustomerController {
     // Delete a customer
     @DeleteMapping("/{customerId}")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Integer customerId) {
-        if (customerService.existsByCustomerId(customerId)) {
+        if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
         customerService.deleteCustomer(customerId);
@@ -71,18 +71,18 @@ public class CustomerController {
 
     // Get account details for a customer
     @GetMapping("/{customerId}/accounts/{accountId}")
-    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable Integer customerId, @PathVariable Integer accountId) {
-        if (customerService.existsByCustomerId(customerId)) {
+    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable Integer customerId, @PathVariable List<Integer> accountId) {
+        if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
-        AccountDTO accountDTO = accountServiceClient.getAccount(accountId);
+        AccountDTO accountDTO = accountServiceClient.getAccountById(accountId);
         return ResponseEntity.ok(accountDTO);
     }
 
     // Deduct funds from a customer's account
     @PostMapping("/{customerId}/accounts/{accountId}/deduct")
     public ResponseEntity<Void> deductFunds(@PathVariable Integer customerId, @PathVariable Integer accountId, @RequestParam BigDecimal amount) {
-        if (customerService.existsByCustomerId(customerId)) {
+        if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
         accountServiceClient.deductFunds(accountId, amount);
@@ -92,7 +92,7 @@ public class CustomerController {
     // Add funds to a customer's account
     @PostMapping("/{customerId}/accounts/{accountId}/add")
     public ResponseEntity<Void> addFunds(@PathVariable Integer customerId, @PathVariable Integer accountId, @RequestParam BigDecimal amount) {
-        if (customerService.existsByCustomerId(customerId)) {
+        if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
         accountServiceClient.addFunds(accountId, amount);

@@ -34,8 +34,8 @@ public class TransactionController {
     public ResponseEntity<TransactionResponseDTO> createTransaction(@RequestBody @Valid TransactionRequestDTO request) {
         try {
             // Fetch sender and receiver account details
-            AccountDTO senderAccount = accountServiceClient.getAccount(request.getSenderAccountId());
-            AccountDTO receiverAccount = accountServiceClient.getAccount(request.getReceiverAccountId());
+            AccountDTO senderAccount = accountServiceClient.getAccountId(request.getSenderAccountId());
+            AccountDTO receiverAccount = accountServiceClient.getAccountId(request.getReceiverAccountId());
 
             // Fetch sender customer details
             CustomerDTO senderCustomer = customerServiceClient.getCustomer(request.getInitiatedByCustomerId());

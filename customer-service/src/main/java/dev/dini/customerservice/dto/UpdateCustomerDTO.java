@@ -2,15 +2,14 @@ package dev.dini.customerservice.dto;
 
 import dev.dini.customerservice.customer.Address;
 import dev.dini.customerservice.customer.KycStatus;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UpdateCustomerDTO {
 
     private Integer customerId;
@@ -23,11 +22,4 @@ public class UpdateCustomerDTO {
     private String proofOfAddressUrl; // URL to proof of address document
     private KycStatus kycStatus; // Enum to track KYC status
 
-    public Integer getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Integer customerId) {
-        this.customerId = customerId;
-    }
 }

@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public interface AccountServiceClient {
 
     @GetMapping("/api/accounts/{accountId}")
-    AccountDTO getAccount(@PathVariable("accountId") Integer accountId);
+    AccountDTO getAccountId(@PathVariable("accountId") Integer accountId);
 
     @PutMapping("/api/accounts/{senderAccountId}/deduct")
     void deductFunds(@PathVariable("senderAccountId") Integer senderAccountId, @RequestParam("amount") BigDecimal amount);

@@ -11,6 +11,7 @@ import lombok.Setter;
 public class CreateAccountRequestDTO {
 
     private Integer customerId;           // The user ID associated with the account
+    private String accountName;           // The name of the account
     private AccountType accountType; // The type of account (e.g., SAVINGS, CHECKING)
 }
 
