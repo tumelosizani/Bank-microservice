@@ -1,18 +1,34 @@
 package dev.dini.customerservice.dto;
 
+import dev.dini.customerservice.account.AccountDTO;
 import dev.dini.customerservice.customer.Address;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import dev.dini.customerservice.customer.CustomerStatus;
+import dev.dini.customerservice.customer.KycStatus;
+import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
-@Data
+@Builder
 public class CustomerResponseDTO {
+
     private Integer customerId;
     private String firstname;
     private String lastname;
     private String email;
-    private Address address;
 
+    private Address address; // Address embedded in DTO
+
+    private String idNumber; // National ID or Passport number
+    private CustomerStatus status;
+    private KycStatus kycStatus;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    private List<AccountDTO> accounts; // Associated accounts
 }

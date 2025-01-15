@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,6 +32,11 @@ public class Customer {
 
     private LocalDateTime createdAt; // Created timestamp
     private LocalDateTime updatedAt; // Updated timestamp
+
+    @ElementCollection
+    @CollectionTable(name = "customer_accounts", joinColumns = @JoinColumn(name = "customer_id"))
+    @Column(name = "account_id")
+    private List<Integer> accountId;
 
 
 

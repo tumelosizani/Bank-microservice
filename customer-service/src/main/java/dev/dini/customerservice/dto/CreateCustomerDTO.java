@@ -3,6 +3,8 @@ package dev.dini.customerservice.dto;
 import dev.dini.customerservice.customer.KycStatus;
 import lombok.*;
 
+import java.util.List;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -22,4 +24,5 @@ public class CreateCustomerDTO {
     private String idDocumentUrl; // URL to ID document (e.g., scanned image)
     private String proofOfAddressUrl; // URL to proof of address document
     private KycStatus kycStatus; // Enum to track KYC status
+    private List<Integer> accountIds; // List of account IDs associated with the customer
 }

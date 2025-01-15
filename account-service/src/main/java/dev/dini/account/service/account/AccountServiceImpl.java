@@ -146,6 +146,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     public void processTransaction(Integer fromAccountId, Integer toAccountId, BigDecimal amount) {
+
+        if (fromAccountId == null || toAccountId == null || amount == null) {
+            throw new IllegalArgumentException("Transaction data cannot be null");
+        }
         // Create a transaction DTO
         TransactionDTO transactionDTO = new TransactionDTO();
         transactionDTO.setFromAccountId(fromAccountId);
@@ -154,5 +158,12 @@ public class AccountServiceImpl implements AccountService {
 
         // Call the Transaction service using Feign Client
         transactionFeignClient.createTransaction(transactionDTO);
+    }
+
+    public void linkAccountToCustomer(Integer accountId, Integer customerId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("No account found with ID: " + accountId));
+        account.setCustomerId(customerId); // Update the customer ID
+        accountRepository.save(account);
     }
 }
