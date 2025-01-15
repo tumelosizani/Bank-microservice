@@ -6,7 +6,6 @@ import dev.dini.customerservice.dto.CreateCustomerDTO;
 import dev.dini.customerservice.dto.UpdateCustomerDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface CustomerMapper {

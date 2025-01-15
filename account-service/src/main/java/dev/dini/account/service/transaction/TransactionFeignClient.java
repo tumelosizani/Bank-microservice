@@ -4,8 +4,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import dev.dini.account.service.dto.TransactionDTO;
-
 @FeignClient(name = "transaction-service",
         url = "${application.config.transaction-url}")
 public interface TransactionFeignClient {

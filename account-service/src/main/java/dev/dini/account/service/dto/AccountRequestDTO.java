@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 @Setter
 @Data
 public class AccountRequestDTO {
-    private Integer userId;
+    private Integer customerId;
     private String accountName;
     private BigDecimal balance;
     private AccountType accountType;

@@ -1,54 +1,102 @@
 package dev.dini.account.service.account;
 
 import dev.dini.account.service.dto.AccountRequestDTO;
+import dev.dini.account.service.dto.AccountResponseDTO;
 import dev.dini.account.service.dto.CreateAccountRequestDTO;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
 @RestController
-@RequestMapping("api/v1/accounts")
+@RequestMapping("/api/v1/accounts")
+@RequiredArgsConstructor
 public class AccountController {
+
     private final AccountService accountService;
 
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
-    }
-
-    // Endpoint to create a new account
     @PostMapping
     public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequestDTO createAccountRequestDTO) {
         Account createdAccount = accountService.createAccount(createAccountRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
+        return ResponseEntity.ok(createdAccount);
     }
 
-    // Endpoint to retrieve account details
     @GetMapping("/{accountId}")
     public ResponseEntity<Account> getAccount(@PathVariable Integer accountId) {
         Account account = accountService.getAccount(accountId);
         return ResponseEntity.ok(account);
     }
 
-    // Endpoint to update account details
     @PutMapping("/{accountId}")
-    public ResponseEntity<Account> updateAccount(@PathVariable Integer accountId, @RequestBody AccountRequestDTO updatedAccount) {
-        Account account = accountService.updateAccount(accountId, updatedAccount);
-        return ResponseEntity.ok(account);
+    public ResponseEntity<AccountResponseDTO> updateAccount(@PathVariable Integer accountId, @RequestBody AccountRequestDTO accountRequestDTO) {
+        AccountResponseDTO updatedAccount = accountService.updateAccount(accountId, accountRequestDTO);
+        return ResponseEntity.ok(updatedAccount);
     }
 
-    // Endpoint to retrieve account balance
+    @DeleteMapping("/{accountId}")
+    public ResponseEntity<Void> closeAccount(@PathVariable Integer accountId) {
+        accountService.closeAccount(accountId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{accountId}/balance")
     public ResponseEntity<BigDecimal> getBalance(@PathVariable Integer accountId) {
         BigDecimal balance = accountService.getBalance(accountId);
         return ResponseEntity.ok(balance);
     }
 
-    // Endpoint to close an account
-    @DeleteMapping("/{accountId}")
-    public ResponseEntity<Void> closeAccount(@PathVariable Integer accountId) {
-        accountService.closeAccount(accountId);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/transfer")
+    public ResponseEntity<Void> transferFunds(@RequestParam Integer fromAccountId, @RequestParam Integer toAccountId, @RequestParam BigDecimal amount) {
+        accountService.transferFunds(fromAccountId, toAccountId, amount);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{accountId}/accountType")
+    public ResponseEntity<Account> changeAccountType(@PathVariable Integer accountId, @RequestBody AccountType newAccountType) {
+        Account updatedAccount = accountService.changeAccountType(accountId, newAccountType);
+        return ResponseEntity.ok(updatedAccount);
+    }
+
+    @PutMapping("/{accountId}/overdraftProtection")
+    public ResponseEntity<Void> setOverdraftProtection(@PathVariable Integer accountId, @RequestParam boolean enabled) {
+        accountService.setOverdraftProtection(accountId, enabled);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{accountId}/freeze")
+    public ResponseEntity<Void> freezeAccount(@PathVariable Integer accountId) {
+        accountService.freezeAccount(accountId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{accountId}/unfreeze")
+    public ResponseEntity<Void> unfreezeAccount(@PathVariable Integer accountId) {
+        accountService.unfreezeAccount(accountId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{accountId}/addHolder")
+    public ResponseEntity<Void> addAccountHolder(@PathVariable Integer accountId, @RequestParam Integer customerId) {
+        accountService.addAccountHolder(accountId, customerId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{accountId}/removeHolder")
+    public ResponseEntity<Void> removeAccountHolder(@PathVariable Integer accountId, @RequestParam Integer customerId) {
+        accountService.removeAccountHolder(accountId, customerId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{accountId}/status")
+    public ResponseEntity<AccountStatus> checkAccountStatus(@PathVariable Integer accountId) {
+        AccountStatus status = accountService.checkAccountStatus(accountId);
+        return ResponseEntity.ok(status);
+    }
+
+    @PutMapping("/{accountId}/transactionLimit")
+    public ResponseEntity<Void> setTransactionLimit(@PathVariable Integer accountId, @RequestParam BigDecimal limit) {
+        accountService.setTransactionLimit(accountId, limit);
+        return ResponseEntity.ok().build();
     }
 }

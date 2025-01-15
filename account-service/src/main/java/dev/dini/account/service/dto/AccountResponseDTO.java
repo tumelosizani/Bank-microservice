@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Data
 public class AccountResponseDTO {
     private Integer accountId;
-    private Integer userId;
+    private Integer customerId;
     private String accountName;
     private BigDecimal balance;
     private AccountType accountType;

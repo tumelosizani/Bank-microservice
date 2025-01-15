@@ -10,7 +10,7 @@ import lombok.Setter;
 @Data
 public class CreateAccountRequestDTO {
 
-    private Integer userId;           // The user ID associated with the account
+    private Integer customerId;           // The user ID associated with the account
     private AccountType accountType; // The type of account (e.g., SAVINGS, CHECKING)
 }
 

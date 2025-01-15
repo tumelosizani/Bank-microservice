@@ -28,3 +28,4 @@ spring:
 application:
   config:
     transaction-url: "http://localhost:8085"
+    customer-url: "http://localhost:8086"

@@ -1,4 +1,4 @@
-package dev.dini.account.service.dto;
+package dev.dini.account.service.transaction;
 
 import lombok.Data;
 import lombok.Getter;

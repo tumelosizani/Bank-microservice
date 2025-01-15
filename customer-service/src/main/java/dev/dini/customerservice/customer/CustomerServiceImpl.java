@@ -6,7 +6,6 @@ import dev.dini.customerservice.dto.UpdateCustomerDTO;
 import dev.dini.customerservice.exception.CustomerNotFoundException;
 import dev.dini.customerservice.mapper.CustomerMapper;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -34,7 +33,7 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void updateCustomer(UpdateCustomerDTO updateCustomerDTO) {
-        Customer customer = (Customer) this.customerRepository.findByCustomerId(updateCustomerDTO.getCustomerId())
+        Customer customer = this.customerRepository.findByCustomerId(updateCustomerDTO.getCustomerId())
                 .orElseThrow(() -> new CustomerNotFoundException(
                         String.format("Cannot update customer:: No customer found with the provided ID: %s", updateCustomerDTO.getCustomerId())
                 ));
@@ -47,7 +46,7 @@ public class CustomerServiceImpl implements CustomerService {
     public List<CustomerResponseDTO> findAllCustomers() {
         return this.customerRepository.findAll()
                 .stream()
-                .map(this.customerMapper::toResponseDTO)
+                .map(customerMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
@@ -59,13 +58,63 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public boolean existsById(Integer customerId) {
-        return this.customerRepository.findById(customerId)
-                .isPresent();
+    public boolean existsByCustomerId(Integer customerId) {
+        return this.customerRepository.findById(customerId).isPresent();
     }
 
     @Override
     public void deleteCustomer(Integer customerId) {
         this.customerRepository.deleteById(customerId);
+    }
+
+    @Override
+    public void deactivateCustomer(Integer customerId) {
+        Customer customer = customerRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", customerId)));
+        customer.setStatus(CustomerStatus.DEACTIVATED);
+        customer.setUpdatedAt(LocalDateTime.now());
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public void activateCustomer(Integer customerId) {
+        Customer customer = customerRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", customerId)));
+        customer.setStatus(CustomerStatus.ACTIVE);
+        customer.setUpdatedAt(LocalDateTime.now());
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public void suspendCustomer(Integer customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided ID: " + customerId));
+        customer.setStatus(CustomerStatus.SUSPENDED);
+        customer.setUpdatedAt(LocalDateTime.now());
+        customerRepository.save(customer);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return this.customerRepository.findByEmail(email).isPresent();
+    }
+
+    @Override
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return this.customerRepository.findByPhoneNumber(phoneNumber).isPresent();
+    }
+
+    @Override
+    public CustomerResponseDTO findByEmail(String email) {
+        return customerRepository.findByEmail(email)
+                .map(customer -> customerMapper.toResponseDTO((Customer) customer))
+                .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided email: " + email));
+    }
+
+    @Override
+    public CustomerResponseDTO findByPhoneNumber(String phoneNumber) {
+        return customerRepository.findByPhoneNumber(phoneNumber)
+                .map(customer -> customerMapper.toResponseDTO((Customer) customer))
+                .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided phone number: " + phoneNumber));
     }
 }
