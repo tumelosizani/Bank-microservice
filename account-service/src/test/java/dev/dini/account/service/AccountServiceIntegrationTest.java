@@ -52,7 +52,7 @@ public class AccountServiceIntegrationTest {
 
         // Assert: Verify the account is saved in the database
         Account savedAccount = accountRepository.findAll().get(0);
-        assertEquals(Integer.valueOf(12345), savedAccount.getUserId());
+        assertEquals(Integer.valueOf(12345), savedAccount.getCustomerId());
         assertEquals(AccountType.SAVINGS, savedAccount.getAccountType());
         assertEquals(BigDecimal.ZERO, savedAccount.getBalance());
     }
@@ -61,13 +61,13 @@ public class AccountServiceIntegrationTest {
     public void testGetAccount() throws Exception {
         // Arrange: Create and save an account
         Account account = new Account();
-        account.setUserId(12345); // Ensuring userId is an Integer
+        account.setCustomerId(12345); // Ensuring userId is an Integer
         account.setAccountType(AccountType.SAVINGS);
         account.setBalance(BigDecimal.ZERO);
         accountRepository.save(account);
 
         // Act: Send GET request to fetch the account by userId
-        mockMvc.perform(get("/accounts/{userId}", account.getUserId()))
+        mockMvc.perform(get("/accounts/{userId}", account.getCustomerId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(12345))
                 .andExpect(jsonPath("$.accountType").value("SAVINGS"))
@@ -78,13 +78,13 @@ public class AccountServiceIntegrationTest {
     public void testGetAllAccounts() throws Exception {
         // Arrange: Create and save two accounts
         Account account1 = new Account();
-        account1.setUserId(12345); // Ensuring userId is an Integer
+        account1.setCustomerId(12345); // Ensuring userId is an Integer
         account1.setAccountType(AccountType.SAVINGS);
         account1.setBalance(BigDecimal.ZERO);
         accountRepository.save(account1);
 
         Account account2 = new Account();
-        account2.setUserId(67890); // Ensuring userId is an Integer
+        account2.setCustomerId(67890); // Ensuring userId is an Integer
         account2.setAccountType(AccountType.CHECKING);
         account2.setBalance(BigDecimal.ZERO);
         accountRepository.save(account2);

@@ -1,4 +1,4 @@
-package dev.dini.account.service.account;
+package dev.dini.account.service.exception;
 
 public class AccountNotFoundException extends RuntimeException {
     public AccountNotFoundException(String message) {
