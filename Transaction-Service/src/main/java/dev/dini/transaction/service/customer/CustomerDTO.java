@@ -10,6 +10,8 @@ import lombok.Setter;
 public class CustomerDTO {
 
     private Integer customerId;
+    private String firstName;
+    private String lastName;
     private String email; // For notifications
     private String phoneNumber; // For notifications (optional)
 }
