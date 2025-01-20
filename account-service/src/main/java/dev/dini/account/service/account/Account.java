@@ -1,6 +1,7 @@
 package dev.dini.account.service.account;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,8 +24,12 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer accountId;
 
+    @NotNull
     private Integer customerId;
+
     private String accountName;
+
+    @NotNull
     private BigDecimal balance;
 
     @Enumerated(EnumType.STRING)
@@ -34,6 +39,8 @@ public class Account {
     private AccountStatus status;
 
     private boolean overdraftProtection;
+
+    @NotNull
     private BigDecimal transactionLimit;
 
     private LocalDateTime createdAt;

@@ -71,12 +71,22 @@ public class CustomerController {
 
     // Get account details for a customer
     @GetMapping("/{customerId}/accounts/{accountId}")
-    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable Integer customerId, @PathVariable List<Integer> accountId) {
+    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable Integer customerId, @PathVariable Integer accountId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
         AccountDTO accountDTO = accountServiceClient.getAccountById(accountId);
         return ResponseEntity.ok(accountDTO);
+    }
+
+    // Get all accounts for a customer
+    @GetMapping("/{customerId}/accounts")
+    public ResponseEntity<List<AccountDTO>> getAccountsForCustomer(@PathVariable Integer customerId) {
+        if (!customerService.existsByCustomerId(customerId)) {
+            throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
+        }
+        List<AccountDTO> accountDTOs = accountServiceClient.getAccountsByCustomerId(customerId);
+        return ResponseEntity.ok(accountDTOs);
     }
 
     // Deduct funds from a customer's account

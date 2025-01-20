@@ -1,5 +1,6 @@
 package dev.dini.customerservice.customer;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -11,4 +12,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer > {
     Optional<Object> findByEmail(String email);
 
     Optional<Object> findByPhoneNumber(String phoneNumber);
+
+    boolean existsByIdNumber( Integer idNumber);
 }

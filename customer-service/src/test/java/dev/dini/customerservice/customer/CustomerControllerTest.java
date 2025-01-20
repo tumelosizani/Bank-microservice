@@ -5,7 +5,6 @@ import dev.dini.customerservice.account.AccountServiceClient;
 import dev.dini.customerservice.dto.CustomerResponseDTO;
 import dev.dini.customerservice.dto.CreateCustomerDTO;
 import dev.dini.customerservice.dto.UpdateCustomerDTO;
-import dev.dini.customerservice.exception.CustomerNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,8 +94,6 @@ public class CustomerControllerTest {
         verify(customerService, times(0)).updateCustomer(any(UpdateCustomerDTO.class)); // Ensure update is not called
     }
 
-
-
     @Test
     public void testDeleteCustomer() throws Exception {
         when(customerService.existsByCustomerId(anyInt())).thenReturn(true);
@@ -113,13 +110,13 @@ public class CustomerControllerTest {
         accountDTO.setAccountId(1);
 
         when(customerService.existsByCustomerId(anyInt())).thenReturn(true);
-        when(accountServiceClient.getAccountById(anyList())).thenReturn(accountDTO);
+        when(accountServiceClient.getAccountById(anyInt())).thenReturn(accountDTO);
 
         mockMvc.perform(get("/api/v1/customers/1/accounts/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accountId").value(1));
 
-        verify(accountServiceClient, times(1)).getAccountById(anyList());
+        verify(accountServiceClient, times(1)).getAccountById(anyInt());
     }
 
     @Test

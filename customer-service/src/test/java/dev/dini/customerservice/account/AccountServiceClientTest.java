@@ -23,7 +23,7 @@ class AccountServiceClientTest {
 
     @Test
     void getAccountById_returnsAccount() {
-        List<Integer> accountId = List.of(1);
+        Integer accountId = 1;
         AccountDTO expectedAccount = new AccountDTO();
         when(accountServiceClient.getAccountById(accountId)).thenReturn(expectedAccount);
 

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -165,5 +166,15 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new AccountNotFoundException("No account found with ID: " + accountId));
         account.setCustomerId(customerId); // Update the customer ID
         accountRepository.save(account);
+    }
+
+    @Override
+    public List<Account> getAccountsByCustomerId(Integer customerId) {
+        CustomerDTO customerDTO = customerServiceClient.getCustomerById(customerId);
+
+        if (customerDTO == null){
+            throw new AccountNotFoundException("No customer found with ID: " + customerId);
+        }
+        return accountRepository.findByCustomerId(customerId);
     }
 }

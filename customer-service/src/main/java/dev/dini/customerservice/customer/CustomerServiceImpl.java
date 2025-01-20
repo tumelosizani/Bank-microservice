@@ -5,9 +5,11 @@ import dev.dini.customerservice.account.AccountServiceClient;
 import dev.dini.customerservice.dto.CreateCustomerDTO;
 import dev.dini.customerservice.dto.CustomerResponseDTO;
 import dev.dini.customerservice.dto.UpdateCustomerDTO;
+import dev.dini.customerservice.exception.CustomerAlreadyExistsException;
 import dev.dini.customerservice.exception.CustomerNotFoundException;
 import dev.dini.customerservice.mapper.CustomerMapper;
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,17 +31,28 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Integer createCustomer(@Valid CreateCustomerDTO createCustomerDTO) {
+        // Check if a customer with the same id_number already exists
+        if (customerRepository.existsByIdNumber(createCustomerDTO.getIdNumber())) {
+            throw new CustomerAlreadyExistsException("Customer with the provided ID number already exists.");
+        }
+
         // Map DTO to Customer Entity
         Customer customer = customerMapper.toEntity(createCustomerDTO);
         customer.setCreatedAt(LocalDateTime.now());
-        customer = this.customerRepository.save(customer);
+
+        try {
+            // Save the customer
+            customer = this.customerRepository.save(customer);
+        } catch (DataIntegrityViolationException e) {
+            // Handle exception gracefully
+            throw new IllegalStateException("An error occurred while saving the customer. Please try again later.", e);
+        }
 
         // Call Account Service to link accounts
-        final Customer savedCustomer = customer;
         if (createCustomerDTO.getAccountIds() != null && !createCustomerDTO.getAccountIds().isEmpty()) {
-            createCustomerDTO.getAccountIds().forEach(accountId ->
-                    accountServiceClient.linkAccountToCustomer(accountId, savedCustomer.getCustomerId())
-            );
+            for (Integer accountId : createCustomerDTO.getAccountIds()) {
+                accountServiceClient.linkAccountToCustomer(accountId, customer.getCustomerId());
+            }
         }
 
         return customer.getCustomerId();
@@ -95,12 +108,10 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
 
         // Optionally update the account status
-        if (customer.getAccountId() != null) {
-            AccountDTO account = accountServiceClient.getAccountById(customer.getAccountId());
-            if (account != null) {
-                account.setStatus("DEACTIVATED");
-                // Save the account update via another service call if necessary
-            }
+        List<AccountDTO> accounts = accountServiceClient.getAccountsByCustomerId(customer.getCustomerId());
+        for (AccountDTO account : accounts) {
+            account.setStatus("DEACTIVATED");
+            // Save the account update via another service call if necessary
         }
     }
 
