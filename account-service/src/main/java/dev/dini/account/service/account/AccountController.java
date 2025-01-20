@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
@@ -28,8 +29,16 @@ public class AccountController {
         return ResponseEntity.ok(account);
     }
 
+    // Retrieve all accounts linked to a specific customer
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Account>> getAccountsByCustomerId(@PathVariable Integer customerId) {
+        List<Account> accounts = accountService.getAccountsByCustomerId(customerId);
+        return ResponseEntity.ok(accounts);
+    }
+
     @PutMapping("/{accountId}")
-    public ResponseEntity<AccountResponseDTO> updateAccount(@PathVariable Integer accountId, @RequestBody AccountRequestDTO accountRequestDTO) {
+    public ResponseEntity<AccountResponseDTO> updateAccount(@PathVariable Integer accountId,
+                                                            @RequestBody AccountRequestDTO accountRequestDTO) {
         AccountResponseDTO updatedAccount = accountService.updateAccount(accountId, accountRequestDTO);
         return ResponseEntity.ok(updatedAccount);
     }
@@ -47,19 +56,23 @@ public class AccountController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<Void> transferFunds(@RequestParam Integer fromAccountId, @RequestParam Integer toAccountId, @RequestParam BigDecimal amount) {
+    public ResponseEntity<Void> transferFunds(@RequestParam Integer fromAccountId,
+                                              @RequestParam Integer toAccountId,
+                                              @RequestParam BigDecimal amount) {
         accountService.transferFunds(fromAccountId, toAccountId, amount);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{accountId}/accountType")
-    public ResponseEntity<Account> changeAccountType(@PathVariable Integer accountId, @RequestBody AccountType newAccountType) {
+    public ResponseEntity<Account> changeAccountType(@PathVariable Integer accountId,
+                                                     @RequestBody AccountType newAccountType) {
         Account updatedAccount = accountService.changeAccountType(accountId, newAccountType);
         return ResponseEntity.ok(updatedAccount);
     }
 
     @PutMapping("/{accountId}/overdraftProtection")
-    public ResponseEntity<Void> setOverdraftProtection(@PathVariable Integer accountId, @RequestParam boolean enabled) {
+    public ResponseEntity<Void> setOverdraftProtection(@PathVariable Integer accountId,
+                                                       @RequestParam boolean enabled) {
         accountService.setOverdraftProtection(accountId, enabled);
         return ResponseEntity.ok().build();
     }
@@ -77,13 +90,15 @@ public class AccountController {
     }
 
     @PutMapping("/{accountId}/addHolder")
-    public ResponseEntity<Void> addAccountHolder(@PathVariable Integer accountId, @RequestParam Integer customerId) {
+    public ResponseEntity<Void> addAccountHolder(@PathVariable Integer accountId,
+                                                 @RequestParam Integer customerId) {
         accountService.addAccountHolder(accountId, customerId);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{accountId}/removeHolder")
-    public ResponseEntity<Void> removeAccountHolder(@PathVariable Integer accountId, @RequestParam Integer customerId) {
+    public ResponseEntity<Void> removeAccountHolder(@PathVariable Integer accountId,
+                                                    @RequestParam Integer customerId) {
         accountService.removeAccountHolder(accountId, customerId);
         return ResponseEntity.ok().build();
     }
@@ -95,7 +110,8 @@ public class AccountController {
     }
 
     @PutMapping("/{accountId}/transactionLimit")
-    public ResponseEntity<Void> setTransactionLimit(@PathVariable Integer accountId, @RequestParam BigDecimal limit) {
+    public ResponseEntity<Void> setTransactionLimit(@PathVariable Integer accountId,
+                                                    @RequestParam BigDecimal limit) {
         accountService.setTransactionLimit(accountId, limit);
         return ResponseEntity.ok().build();
     }

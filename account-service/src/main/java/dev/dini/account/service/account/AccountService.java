@@ -5,8 +5,11 @@ import dev.dini.account.service.dto.AccountResponseDTO;
 import dev.dini.account.service.dto.CreateAccountRequestDTO;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface AccountService {
+    List<Account> getAccountsByCustomerId(Integer customerId);
+
     Account createAccount(CreateAccountRequestDTO createAccountRequestDTO);
 
     // Retrieve account details
@@ -35,10 +38,6 @@ public interface AccountService {
     AccountStatus checkAccountStatus(Integer accountId);
 
     void setTransactionLimit(Integer accountId, BigDecimal limit);
-
-
-
-
 
 
 }

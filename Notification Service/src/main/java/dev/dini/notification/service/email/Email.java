@@ -1,4 +1,4 @@
-package dev.dini.notification_service.email;
+package dev.dini.notification.service.email;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class Email {
 
-    private final JavaMailSender mailSender;
-    private final SpringTemplateEngine templateEngine;
+
+
 }

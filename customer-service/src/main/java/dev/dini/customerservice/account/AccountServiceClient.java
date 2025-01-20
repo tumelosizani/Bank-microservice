@@ -9,30 +9,29 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.math.BigDecimal;
 import java.util.List;
 
-@FeignClient(name = "account-service", url = "http://account-service-url")
+@FeignClient(name = "account-service", url = "${application.config.account-url}")
 public interface AccountServiceClient {
 
     // Retrieve a single account by ID
-    @GetMapping("/accounts/{accountId}")
-    AccountDTO getAccountById(@PathVariable("accountId") List<Integer> accountId);
+    @GetMapping("/api/v1/accounts/{accountId}")
+    AccountDTO getAccountById(@PathVariable("accountId") Integer accountId);
+
+    // Retrieve all accounts linked to a specific customer
+    @GetMapping("/api/v1/accounts/customer/{customerId}")
+    List<AccountDTO> getAccountsByCustomerId(@PathVariable("customerId") Integer customerId);
 
     // Deduct funds from an account
-    @PostMapping("/accounts/deductFunds")
+    @PostMapping("/api/v1/accounts/deductFunds")
     void deductFunds(@RequestParam("senderAccountId") Integer senderAccountId,
                      @RequestParam("amount") BigDecimal amount);
 
     // Add funds to an account
-    @PostMapping("/accounts/addFunds")
+    @PostMapping("/api/v1/accounts/addFunds")
     void addFunds(@RequestParam("receiverAccountId") Integer receiverAccountId,
                   @RequestParam("amount") BigDecimal amount);
 
     // Link an account to a customer
-    @PostMapping("/accounts/{accountId}/linkCustomer")
+    @PostMapping("/api/v1/accounts/{accountId}/linkCustomer")
     void linkAccountToCustomer(@PathVariable("accountId") Integer accountId,
                                @RequestParam("customerId") Integer customerId);
-
-    // Retrieve all accounts linked to a specific customer
-    @GetMapping("/accounts/customer/{customerId}")
-    List<AccountDTO> getAccountsByCustomerId(@PathVariable("customerId") Integer customerId);
-
 }
