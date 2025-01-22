@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,8 +18,8 @@ import java.util.List;
 public class Customer {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer customerId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID customerId;
 
     @NotNull
     private String firstname;
@@ -55,7 +56,7 @@ public class Customer {
     @ElementCollection
     @CollectionTable(name = "customer_accounts", joinColumns = @JoinColumn(name = "customer_id"))
     @Column(name = "account_id")
-    private List<Integer> accountId;
+    private List<UUID> accountId;
 
     @PrePersist
     public void onCreate() {

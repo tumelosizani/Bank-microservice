@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +31,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Integer createCustomer(@Valid CreateCustomerDTO createCustomerDTO) {
+    public UUID createCustomer(@Valid CreateCustomerDTO createCustomerDTO) {
         // Check if a customer with the same id_number already exists
         if (customerRepository.existsByIdNumber(createCustomerDTO.getIdNumber())) {
             throw new CustomerAlreadyExistsException("Customer with the provided ID number already exists.");
@@ -50,7 +51,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         // Call Account Service to link accounts
         if (createCustomerDTO.getAccountIds() != null && !createCustomerDTO.getAccountIds().isEmpty()) {
-            for (Integer accountId : createCustomerDTO.getAccountIds()) {
+            for (UUID accountId : createCustomerDTO.getAccountIds()) {
                 accountServiceClient.linkAccountToCustomer(accountId, customer.getCustomerId());
             }
         }
@@ -78,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerResponseDTO findById(Integer customerId) {
+    public CustomerResponseDTO findById(UUID customerId) {
         Customer customer = this.customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with ID: " + customerId));
 
@@ -90,17 +91,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public boolean existsByCustomerId(Integer customerId) {
+    public boolean existsByCustomerId(UUID customerId) {
         return this.customerRepository.findById(customerId).isPresent();
     }
 
     @Override
-    public void deleteCustomer(Integer customerId) {
+    public void deleteCustomer(UUID customerId) {
         this.customerRepository.deleteById(customerId);
     }
 
     @Override
-    public void deactivateCustomer(Integer customerId) {
+    public void deactivateCustomer(UUID customerId) {
         Customer customer = customerRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided ID: " + customerId));
         customer.setStatus(CustomerStatus.DEACTIVATED);
@@ -116,7 +117,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void activateCustomer(Integer customerId) {
+    public void activateCustomer(UUID customerId) {
         Customer customer = customerRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", customerId)));
         customer.setStatus(CustomerStatus.ACTIVE);
@@ -125,7 +126,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void suspendCustomer(Integer customerId) {
+    public void suspendCustomer(UUID customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided ID: " + customerId));
         customer.setStatus(CustomerStatus.SUSPENDED);
@@ -156,4 +157,5 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customer -> customerMapper.toResponseDTO((Customer) customer))
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided phone number: " + phoneNumber));
     }
+
 }

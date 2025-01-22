@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -22,12 +23,13 @@ public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer accountId;
+    private UUID accountId;
 
     @NotNull
-    private Integer customerId;
+    private UUID customerId;
 
     private String accountName;
+    private Integer accountNumber;
 
     @NotNull
     private BigDecimal balance;
@@ -52,7 +54,7 @@ public class Account {
     @ElementCollection
     @CollectionTable(name = "account_holders", joinColumns = @JoinColumn(name = "account_id"))
     @Column(name = "customer_id")
-    private Set<Integer> accountHolders = new HashSet<>();
+    private Set<UUID> accountHolders = new HashSet<>();
 
 
     @PrePersist
@@ -65,11 +67,11 @@ public class Account {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void addAccountHolder(Integer customerId) {
+    public void addAccountHolder(UUID customerId) {
         this.accountHolders.add(customerId);
     }
 
-    public void removeAccountHolder(Integer customerId) {
+    public void removeAccountHolder(UUID customerId) {
         this.accountHolders.remove(customerId);
     }
 
