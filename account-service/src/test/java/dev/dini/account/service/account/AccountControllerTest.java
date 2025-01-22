@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +50,7 @@ public class AccountControllerTest {
 
     @Test
     void getAccount_withValidId_returnsAccount() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         Account account = new Account();
         when(accountService.getAccount(accountId)).thenReturn(account);
 
@@ -61,7 +62,7 @@ public class AccountControllerTest {
 
     @Test
     void updateAccount_withValidData_returnsUpdatedAccount() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         AccountRequestDTO requestDTO = new AccountRequestDTO();
         AccountResponseDTO responseDTO = new AccountResponseDTO();
         when(accountService.updateAccount(accountId, requestDTO)).thenReturn(responseDTO);
@@ -74,7 +75,7 @@ public class AccountControllerTest {
 
     @Test
     void closeAccount_withValidId_returnsNoContent() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
 
         ResponseEntity<Void> response = accountController.closeAccount(accountId);
 
@@ -83,7 +84,7 @@ public class AccountControllerTest {
 
     @Test
     void getBalance_withValidId_returnsBalance() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         BigDecimal balance = BigDecimal.TEN;
         when(accountService.getBalance(accountId)).thenReturn(balance);
 
@@ -95,8 +96,8 @@ public class AccountControllerTest {
 
     @Test
     void transferFunds_withValidData_returnsOk() {
-        Integer fromAccountId = 1;
-        Integer toAccountId = 2;
+        UUID fromAccountId = UUID.randomUUID();
+        UUID toAccountId = UUID.randomUUID();
         BigDecimal amount = BigDecimal.TEN;
 
         ResponseEntity<Void> response = accountController.transferFunds(fromAccountId, toAccountId, amount);
@@ -106,7 +107,7 @@ public class AccountControllerTest {
 
     @Test
     void changeAccountType_withValidData_returnsUpdatedAccount() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         AccountType newAccountType = AccountType.SAVINGS;
         Account account = new Account();
         when(accountService.changeAccountType(accountId, newAccountType)).thenReturn(account);
@@ -119,7 +120,7 @@ public class AccountControllerTest {
 
     @Test
     void setOverdraftProtection_withValidData_returnsOk() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         boolean enabled = true;
 
         ResponseEntity<Void> response = accountController.setOverdraftProtection(accountId, enabled);
@@ -129,7 +130,7 @@ public class AccountControllerTest {
 
     @Test
     void freezeAccount_withValidId_returnsOk() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
 
         ResponseEntity<Void> response = accountController.freezeAccount(accountId);
 
@@ -138,7 +139,7 @@ public class AccountControllerTest {
 
     @Test
     void unfreezeAccount_withValidId_returnsOk() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
 
         ResponseEntity<Void> response = accountController.unfreezeAccount(accountId);
 
@@ -147,8 +148,8 @@ public class AccountControllerTest {
 
     @Test
     void addAccountHolder_withValidData_returnsOk() {
-        Integer accountId = 1;
-        Integer customerId = 2;
+        UUID accountId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
 
         ResponseEntity<Void> response = accountController.addAccountHolder(accountId, customerId);
 
@@ -157,8 +158,8 @@ public class AccountControllerTest {
 
     @Test
     void removeAccountHolder_withValidData_returnsOk() {
-        Integer accountId = 1;
-        Integer customerId = 2;
+        UUID accountId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
 
         ResponseEntity<Void> response = accountController.removeAccountHolder(accountId, customerId);
 
@@ -167,7 +168,7 @@ public class AccountControllerTest {
 
     @Test
     void checkAccountStatus_withValidId_returnsStatus() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         AccountStatus status = AccountStatus.ACTIVE;
         when(accountService.checkAccountStatus(accountId)).thenReturn(status);
 
@@ -179,7 +180,7 @@ public class AccountControllerTest {
 
     @Test
     void setTransactionLimit_withValidData_returnsOk() {
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         BigDecimal limit = BigDecimal.TEN;
 
         ResponseEntity<Void> response = accountController.setTransactionLimit(accountId, limit);

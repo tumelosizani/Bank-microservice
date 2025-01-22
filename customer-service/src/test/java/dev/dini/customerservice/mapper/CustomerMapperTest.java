@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CustomerMapperTest {
@@ -22,7 +24,7 @@ class CustomerMapperTest {
     @Test
     void toResponseDTO_mapsCustomerToCustomerResponseDTO() {
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(UUID.randomUUID());
         customer.setFirstname("John");
         customer.setLastname("Doe");
 
@@ -48,7 +50,7 @@ class CustomerMapperTest {
     @Test
     void toUpdateCustomerDTO_mapsCustomerToUpdateCustomerDTO() {
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(UUID.randomUUID());
         customer.setFirstname("John");
         customer.setLastname("Doe");
 
@@ -61,7 +63,7 @@ class CustomerMapperTest {
     @Test
     void updateCustomerFromDto_updatesCustomerWithUpdateCustomerDTO() {
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(UUID.randomUUID());
         customer.setFirstname("John");
         customer.setLastname("Doe");
 

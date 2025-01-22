@@ -5,13 +5,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Data
 public class TransactionDTO {
 
-    private Integer fromAccountId;
-    private Integer toAccountId;
+    private UUID fromAccountId;
+    private UUID toAccountId;
     private BigDecimal amount;
 }

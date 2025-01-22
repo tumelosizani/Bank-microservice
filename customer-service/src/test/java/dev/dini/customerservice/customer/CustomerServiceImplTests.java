@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,31 +44,34 @@ public class CustomerServiceImplTests {
     @Test
     void createCustomer_createsAndReturnsCustomerId() {
         CreateCustomerDTO createCustomerDTO = new CreateCustomerDTO();
-        createCustomerDTO.setAccountIds(Collections.singletonList(1));
+        UUID accountId = UUID.randomUUID();
+        createCustomerDTO.setAccountIds(Collections.singletonList(accountId));
 
+        UUID customerUUID = UUID.randomUUID();
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerUUID);
         customer.setCreatedAt(LocalDateTime.now());
 
         when(customerMapper.toEntity(any(CreateCustomerDTO.class))).thenReturn(customer);
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
 
-        Integer customerId = customerService.createCustomer(createCustomerDTO);
+        UUID customerId = customerService.createCustomer(createCustomerDTO);
 
         assertNotNull(customerId);
-        assertEquals(1, customerId);
-        verify(accountServiceClient, times(1)).linkAccountToCustomer(1, 1);
+        assertEquals(customerUUID, customerId);
+        verify(accountServiceClient, times(1)).linkAccountToCustomer(accountId, customerUUID);
     }
 
     @Test
     void updateCustomer_updatesExistingCustomer() {
+        UUID customerId = UUID.randomUUID();
         UpdateCustomerDTO updateCustomerDTO = new UpdateCustomerDTO();
-        updateCustomerDTO.setCustomerId(1);
+        updateCustomerDTO.setCustomerId(customerId);
 
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerId);
 
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.findByCustomerId(customerId)).thenReturn(Optional.of(customer));
 
         customerService.updateCustomer(updateCustomerDTO);
 
@@ -78,9 +82,9 @@ public class CustomerServiceImplTests {
     @Test
     void updateCustomer_throwsExceptionWhenCustomerNotFound() {
         UpdateCustomerDTO updateCustomerDTO = new UpdateCustomerDTO();
-        updateCustomerDTO.setCustomerId(1);
+        updateCustomerDTO.setCustomerId(UUID.randomUUID());
 
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.empty());
+        when(customerRepository.findByCustomerId(UUID.randomUUID())).thenReturn(Optional.empty());
 
         assertThrows(CustomerNotFoundException.class, () -> customerService.updateCustomer(updateCustomerDTO));
     }
@@ -102,14 +106,15 @@ public class CustomerServiceImplTests {
 
     @Test
     void findById_returnsCustomerResponseDTO() {
+        UUID customerId = UUID.randomUUID();
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerId);
         CustomerResponseDTO customerResponseDTO = new CustomerResponseDTO();
 
-        when(customerRepository.findById(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
         when(customerMapper.toResponseDTO(customer)).thenReturn(customerResponseDTO);
 
-        CustomerResponseDTO response = customerService.findById(1);
+        CustomerResponseDTO response = customerService.findById(customerId);
 
         assertNotNull(response);
         assertEquals(customerResponseDTO, response);
@@ -117,26 +122,28 @@ public class CustomerServiceImplTests {
 
     @Test
     void findById_throwsExceptionWhenCustomerNotFound() {
-        when(customerRepository.findById(1)).thenReturn(Optional.empty());
+        when(customerRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.findById(1));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.findById(UUID.randomUUID()));
     }
 
     @Test
     void deleteCustomer_deletesCustomer() {
-        customerService.deleteCustomer(1);
+        UUID customerId = UUID.randomUUID();
+        customerService.deleteCustomer(customerId);
 
-        verify(customerRepository, times(1)).deleteById(1);
+        verify(customerRepository, times(1)).deleteById(customerId);
     }
 
     @Test
     void deactivateCustomer_deactivatesCustomer() {
+        UUID customerId = UUID.randomUUID();
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerId);
 
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.findByCustomerId(customerId)).thenReturn(Optional.of(customer));
 
-        customerService.deactivateCustomer(1);
+        customerService.deactivateCustomer(customerId);
 
         assertEquals(CustomerStatus.DEACTIVATED, customer.getStatus());
         verify(customerRepository, times(1)).save(customer);
@@ -144,19 +151,20 @@ public class CustomerServiceImplTests {
 
     @Test
     void deactivateCustomer_throwsExceptionWhenCustomerNotFound() {
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.empty());
+        when(customerRepository.findByCustomerId(UUID.randomUUID())).thenReturn(Optional.empty());
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.deactivateCustomer(1));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.deactivateCustomer(UUID.randomUUID()));
     }
 
     @Test
     void activateCustomer_activatesCustomer() {
+        UUID customerId = UUID.randomUUID();
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerId);
 
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.findByCustomerId(customerId)).thenReturn(Optional.of(customer));
 
-        customerService.activateCustomer(1);
+        customerService.activateCustomer(customerId);
 
         assertEquals(CustomerStatus.ACTIVE, customer.getStatus());
         verify(customerRepository, times(1)).save(customer);
@@ -164,19 +172,20 @@ public class CustomerServiceImplTests {
 
     @Test
     void activateCustomer_throwsExceptionWhenCustomerNotFound() {
-        when(customerRepository.findByCustomerId(1)).thenReturn(Optional.empty());
+        when(customerRepository.findByCustomerId(UUID.randomUUID())).thenReturn(Optional.empty());
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.activateCustomer(1));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.activateCustomer(UUID.randomUUID()));
     }
 
     @Test
     void suspendCustomer_suspendsCustomer() {
+        UUID customerId = UUID.randomUUID();
         Customer customer = new Customer();
-        customer.setCustomerId(1);
+        customer.setCustomerId(customerId);
 
-        when(customerRepository.findById(1)).thenReturn(Optional.of(customer));
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(customer));
 
-        customerService.suspendCustomer(1);
+        customerService.suspendCustomer(customerId);
 
         assertEquals(CustomerStatus.SUSPENDED, customer.getStatus());
         verify(customerRepository, times(1)).save(customer);
@@ -184,23 +193,24 @@ public class CustomerServiceImplTests {
 
     @Test
     void suspendCustomer_throwsExceptionWhenCustomerNotFound() {
-        when(customerRepository.findById(1)).thenReturn(Optional.empty());
+        when(customerRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
-        assertThrows(CustomerNotFoundException.class, () -> customerService.suspendCustomer(1));
+        assertThrows(CustomerNotFoundException.class, () -> customerService.suspendCustomer(UUID.randomUUID()));
     }
 
     @Test
     void existsByCustomerId_returnsTrueWhenCustomerExists() {
-        when(customerRepository.findById(1)).thenReturn(Optional.of(new Customer()));
+        UUID customerId = UUID.randomUUID();
+        when(customerRepository.findById(customerId)).thenReturn(Optional.of(new Customer()));
 
-        assertTrue(customerService.existsByCustomerId(1));
+        assertTrue(customerService.existsByCustomerId(customerId));
     }
 
     @Test
     void existsByCustomerId_returnsFalseWhenCustomerDoesNotExist() {
-        when(customerRepository.findById(1)).thenReturn(Optional.empty());
+        when(customerRepository.findById(UUID.randomUUID())).thenReturn(Optional.empty());
 
-        assertFalse(customerService.existsByCustomerId(1));
+        assertFalse(customerService.existsByCustomerId(UUID.randomUUID()));
     }
 
     @Test

@@ -6,26 +6,27 @@ import dev.dini.customerservice.dto.UpdateCustomerDTO;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface CustomerService {
 
-    Integer createCustomer(@Valid CreateCustomerDTO createCustomerDTO);
+    UUID createCustomer(@Valid CreateCustomerDTO createCustomerDTO);
 
     void updateCustomer(UpdateCustomerDTO updateCustomerDTO);
 
     List<CustomerResponseDTO> findAllCustomers();
 
-    CustomerResponseDTO findById(Integer customerId);
+    CustomerResponseDTO findById(UUID customerId);
 
-    boolean existsByCustomerId(Integer customerId);
+    boolean existsByCustomerId(UUID customerId);
 
-    void deleteCustomer(Integer customerId);
+    void deleteCustomer(UUID customerId);
 
-    void deactivateCustomer(Integer customerId);
+    void deactivateCustomer(UUID customerId);
 
-    void activateCustomer(Integer customerId);
+    void activateCustomer(UUID customerId);
 
-    void suspendCustomer(Integer customerId);
+    void suspendCustomer(UUID customerId);
 
     boolean existsByEmail(String email);
 

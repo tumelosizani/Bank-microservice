@@ -6,38 +6,39 @@ import dev.dini.account.service.dto.CreateAccountRequestDTO;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public interface AccountService {
-    List<Account> getAccountsByCustomerId(Integer customerId);
+    List<Account> getAccountsByCustomerId(UUID customerId);
 
     Account createAccount(CreateAccountRequestDTO createAccountRequestDTO);
 
     // Retrieve account details
-    Account getAccount(Integer accountId);
+    Account getAccount(UUID accountId);
 
     // Close account
-    void closeAccount(Integer accountId);
+    void closeAccount(UUID accountId);
 
     // Get account balance
-    BigDecimal getBalance(Integer accountId);
+    BigDecimal getBalance(UUID accountId);
 
-    AccountResponseDTO updateAccount(Integer accountId, AccountRequestDTO accountRequestDTO);
-    void transferFunds(Integer fromAccountId, Integer toAccountId, BigDecimal amount);
+    AccountResponseDTO updateAccount(UUID accountId, AccountRequestDTO accountRequestDTO);
+    void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount);
 
-    Account changeAccountType(Integer accountId, AccountType newAccountType);
+    Account changeAccountType(UUID accountId, AccountType newAccountType);
 
-    void setOverdraftProtection(Integer accountId, boolean enabled);
+    void setOverdraftProtection(UUID accountId, boolean enabled);
 
-    void freezeAccount(Integer accountId);
-    void unfreezeAccount(Integer accountId);
+    void freezeAccount(UUID accountId);
+    void unfreezeAccount(UUID accountId);
 
 
-    void addAccountHolder(Integer accountId, Integer customerId);
-    void removeAccountHolder(Integer accountId, Integer customerId);
+    void addAccountHolder(UUID accountId, UUID customerId);
+    void removeAccountHolder(UUID accountId, UUID customerId);
 
-    AccountStatus checkAccountStatus(Integer accountId);
+    AccountStatus checkAccountStatus(UUID accountId);
 
-    void setTransactionLimit(Integer accountId, BigDecimal limit);
+    void setTransactionLimit(UUID accountId, BigDecimal limit);
 
 
 }
