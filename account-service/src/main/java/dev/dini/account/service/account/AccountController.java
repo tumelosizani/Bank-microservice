@@ -1,9 +1,7 @@
 package dev.dini.account.service.account;
 
 import dev.dini.account.service.customer.CustomerServiceClient;
-import dev.dini.account.service.dto.AccountRequestDTO;
-import dev.dini.account.service.dto.AccountResponseDTO;
-import dev.dini.account.service.dto.CreateAccountRequestDTO;
+import dev.dini.account.service.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,4 +130,21 @@ public class AccountController {
         accountService.setTransactionLimit(accountId, limit);
         return ResponseEntity.ok().build();
     }
+
+    // Add the linkAccountToCustomer endpoint
+    @PutMapping("/{accountId}/linkCustomer")
+    public ResponseEntity<Void> linkAccountToCustomer(@PathVariable UUID accountId,
+                                                      @RequestParam UUID customerId) {
+        accountService.linkAccountToCustomer(accountId, customerId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Add the calculateInterest endpoint
+    @PostMapping("/calculateInterest")
+    public ResponseEntity<InterestCalculationResponseDTO> calculateInterest(@RequestBody InterestCalculationRequestDTO request) {
+        logger.info("Calculating interest for account ID: {}", request.getAccountId());
+        InterestCalculationResponseDTO response = accountService.calculateInterest(request);
+        return ResponseEntity.ok(response);
+    }
+
 }

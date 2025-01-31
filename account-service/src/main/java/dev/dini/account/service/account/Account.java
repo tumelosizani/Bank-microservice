@@ -29,7 +29,7 @@ public class Account {
     private UUID customerId;
 
     private String accountName;
-    private Integer accountNumber;
+    private String accountNumber;
 
     @NotNull
     private BigDecimal balance;

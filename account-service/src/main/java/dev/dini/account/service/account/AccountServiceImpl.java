@@ -1,10 +1,9 @@
 package dev.dini.account.service.account;
 
+import dev.dini.account.service.component.*;
 import dev.dini.account.service.customer.CustomerDTO;
 import dev.dini.account.service.customer.CustomerServiceClient;
-import dev.dini.account.service.dto.AccountRequestDTO;
-import dev.dini.account.service.dto.AccountResponseDTO;
-import dev.dini.account.service.dto.CreateAccountRequestDTO;
+import dev.dini.account.service.dto.*;
 import dev.dini.account.service.exception.AccountNotFoundException;
 import dev.dini.account.service.exception.InsufficientFundsException;
 import dev.dini.account.service.mapper.AccountMapper;
@@ -30,12 +29,21 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
     private final TransactionFeignClient transactionFeignClient;
     private final CustomerServiceClient customerServiceClient;
+    private final AccountNumberGenerator accountNumberGenerator;
+    private final AccountAuditLog accountAuditLog;
+    private final AccountNotification accountNotification;
+    private final AccountVerification accountVerification;
+    private final InterestCalculation interestCalculation;
+    private final AccountLocking accountLocking;
+    private final AccountBalanceChecker accountBalanceChecker;
 
     @Override
     public Account createAccount(CreateAccountRequestDTO createAccountRequestDTO) {
         logger.info("Creating a new account for customer ID: {}", createAccountRequestDTO.getCustomerId());
 
         CustomerDTO customerDTO = customerServiceClient.getCustomerById(createAccountRequestDTO.getCustomerId());
+
+        String generatedAccountNumber = accountNumberGenerator.generateUniqueAccountNumber();
 
         Account newAccount = accountMapper.toAccountFromCreateRequest(createAccountRequestDTO);
         newAccount.setCustomerId(customerDTO.getCustomerId());
@@ -44,6 +52,10 @@ public class AccountServiceImpl implements AccountService {
         newAccount.setUpdatedAt(LocalDateTime.now());
 
         Account savedAccount = accountRepository.save(newAccount);
+
+        accountAuditLog.logAccountEvent(savedAccount.getAccountId(), "CREATE_ACCOUNT", "New account created");
+        accountNotification.sendAccountCreationNotification(savedAccount.getCustomerId(), savedAccount.getAccountId());
+
         logger.info("Account created successfully with ID: {}", savedAccount.getAccountId());
         return savedAccount;
     }
@@ -51,6 +63,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account getAccount(UUID accountId) {
         logger.info("Fetching account with ID: {}", accountId);
+        accountVerification.verifyAccountExists(accountId);
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
     }
@@ -58,16 +71,25 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void closeAccount(UUID accountId) {
         logger.info("Closing account with ID: {}", accountId);
-        Account existingAccount = getAccount(accountId);
-        accountRepository.delete(existingAccount);
+
+        // Check if the account exists and close it
+        accountLocking.closeAccount(accountId);
+
         logger.info("Account closed successfully with ID: {}", accountId);
+
+        // Log the account closure event
+        accountAuditLog.logAccountEvent(accountId, "CLOSE_ACCOUNT", "Account closed");
+
+        // Send a notification about the account closure
+        Account account = accountLocking.getAccount(accountId);
+        accountNotification.sendAccountClosureNotification(account.getCustomerId(), accountId);
     }
 
     @Override
     public BigDecimal getBalance(UUID accountId) {
         logger.info("Fetching balance for account ID: {}", accountId);
-        Account account = getAccount(accountId);
-        return account.getBalance();
+        BigDecimal balance = accountBalanceChecker.getAccountBalance(accountId);
+        return balance;
     }
 
     @Override
@@ -77,6 +99,9 @@ public class AccountServiceImpl implements AccountService {
         accountMapper.updateAccountFromDto(accountRequestDTO, existingAccount);
         existingAccount.setUpdatedAt(LocalDateTime.now());
         Account updatedAccount = accountRepository.save(existingAccount);
+
+        accountAuditLog.logAccountEvent(accountId, "UPDATE_ACCOUNT", "Account updated");
+
         logger.info("Account updated successfully with ID: {}", accountId);
         return accountMapper.toAccountResponseDTOAfterUpdate(updatedAccount);
     }
@@ -85,13 +110,25 @@ public class AccountServiceImpl implements AccountService {
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
         logger.info("Transferring funds from account ID: {} to account ID: {}", fromAccountId, toAccountId);
 
-        Account fromAccount = getAccount(fromAccountId);
-        Account toAccount = getAccount(toAccountId);
+        // Check if the account is locked
+        boolean isAccountLocked = accountLocking.isAccountLocked(fromAccountId);
+        if (isAccountLocked) {
+            logger.error("Account ID: {} is locked", fromAccountId);
+            throw new IllegalStateException("Account is locked due to too many failed attempts");
+        }
 
-        if (fromAccount.getBalance().compareTo(amount) < 0) {
+
+        // Check if sufficient balance exists in the account
+        boolean hasSufficientBalance = accountBalanceChecker.hasSufficientBalance(fromAccountId, amount);
+        if (!hasSufficientBalance) {
             logger.error("Insufficient funds in account ID: {}", fromAccountId);
             throw new InsufficientFundsException("Insufficient funds in account: " + fromAccountId);
         }
+
+
+        // Proceed with the transaction
+        Account fromAccount = getAccount(fromAccountId);
+        Account toAccount = getAccount(toAccountId);
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
         toAccount.setBalance(toAccount.getBalance().add(amount));
@@ -100,6 +137,9 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.save(toAccount);
 
         processTransaction(fromAccountId, toAccountId, amount);
+
+        accountAuditLog.logAccountEvent(fromAccountId, "TRANSFER_FUNDS",
+                "Transferred " + amount + " to account " + toAccountId);
         logger.info("Funds transferred successfully from account ID: {} to account ID: {}", fromAccountId, toAccountId);
     }
 
@@ -127,21 +167,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void freezeAccount(UUID accountId) {
         logger.info("Freezing account with ID: {}", accountId);
-        Account account = getAccount(accountId);
-        account.setStatus(AccountStatus.FROZEN);
-        account.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(account);
+        accountLocking.freezeAccount(accountId);
         logger.info("Account frozen successfully with ID: {}", accountId);
+
+        accountAuditLog.logAccountEvent(accountId, "FREEZE_ACCOUNT", "Account frozen");
     }
 
     @Override
     public void unfreezeAccount(UUID accountId) {
         logger.info("Unfreezing account with ID: {}", accountId);
-        Account account = getAccount(accountId);
-        account.setStatus(AccountStatus.ACTIVE);
-        account.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(account);
+        accountLocking.unfreezeAccount(accountId);
         logger.info("Account unfrozen successfully with ID: {}", accountId);
+
+        accountAuditLog.logAccountEvent(accountId, "UNFREEZE_ACCOUNT", "Account unfrozen");
     }
 
     @Override
@@ -181,6 +219,7 @@ public class AccountServiceImpl implements AccountService {
         logger.info("Transaction limit set successfully for account ID: {}", accountId);
     }
 
+    @Override
     public void processTransaction(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
         logger.info("Processing transaction from account ID: {} to account ID: {} with amount: {}", fromAccountId, toAccountId, amount);
 
@@ -197,9 +236,12 @@ public class AccountServiceImpl implements AccountService {
 
         // Call the Transaction service using Feign Client
         transactionFeignClient.createTransaction(transactionDTO);
+
+        accountAuditLog.logAccountEvent(fromAccountId, "PROCESS_TRANSACTION", "Transaction processed");
         logger.info("Transaction processed successfully from account ID: {} to account ID: {} with amount: {}", fromAccountId, toAccountId, amount);
     }
 
+    @Override
     public void linkAccountToCustomer(UUID accountId, UUID customerId) {
         logger.info("Linking account ID: {} to customer ID: {}", accountId, customerId);
         Account account = accountRepository.findById(accountId)
@@ -221,5 +263,21 @@ public class AccountServiceImpl implements AccountService {
         List<Account> accounts = accountRepository.findByCustomerId(customerId);
         logger.info("Found {} accounts for customer ID: {}", accounts.size(), customerId);
         return accounts;
+    }
+
+    @Override
+    public InterestCalculationResponseDTO calculateInterest(InterestCalculationRequestDTO request) {
+        UUID accountId = request.getAccountId();
+        logger.info("Calculating interest for account ID: {}", accountId);
+        Account account = getAccount(accountId);
+        BigDecimal interestAmount = interestCalculation.calculateInterest(account);
+        account.setBalance(account.getBalance().add(interestAmount));
+        accountRepository.save(account);
+
+        accountAuditLog.logAccountEvent(accountId, "INTEREST_CALCULATION", "Interest calculated");
+
+        InterestCalculationResponseDTO response = new InterestCalculationResponseDTO();
+        response.setInterestAmount(interestAmount);
+        return response;
     }
 }
