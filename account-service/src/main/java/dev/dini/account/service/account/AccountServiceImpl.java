@@ -1,18 +1,24 @@
 package dev.dini.account.service.account;
 
+import dev.dini.account.service.audit.AccountAuditService;
 import dev.dini.account.service.component.*;
 import dev.dini.account.service.customer.CustomerDTO;
 import dev.dini.account.service.customer.CustomerServiceClient;
 import dev.dini.account.service.dto.*;
 import dev.dini.account.service.exception.AccountNotFoundException;
-import dev.dini.account.service.exception.InsufficientFundsException;
+import dev.dini.account.service.interest.InterestCalculationService;
 import dev.dini.account.service.mapper.AccountMapper;
+import dev.dini.account.service.notification.AccountNotificationService;
+import dev.dini.account.service.overdraft.OverdraftService;
+import dev.dini.account.service.security.AccountSecurityService;
 import dev.dini.account.service.transaction.TransactionDTO;
 import dev.dini.account.service.transaction.TransactionFeignClient;
+import dev.dini.account.service.transaction.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,32 +33,42 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
+    private final TransactionService transactionService;
+    private final AccountSecurityService securityService;
+
     private final TransactionFeignClient transactionFeignClient;
     private final CustomerServiceClient customerServiceClient;
     private final AccountNumberGenerator accountNumberGenerator;
-    private final AccountAuditLog accountAuditLog;
-    private final AccountNotification accountNotification;
+    private final AccountAuditService accountAuditLog;
+    private final AccountNotificationService accountNotification;
     private final AccountVerification accountVerification;
-    private final InterestCalculation interestCalculation;
-    private final AccountLocking accountLocking;
+    private final InterestCalculationService interestCalculation;
     private final AccountBalanceChecker accountBalanceChecker;
+    private final OverdraftService overdraftService;
+    private final AccountSecurityService accountSecurityService;
 
     @Override
     public Account createAccount(CreateAccountRequestDTO createAccountRequestDTO) {
         logger.info("Creating a new account for customer ID: {}", createAccountRequestDTO.getCustomerId());
 
+        // Validate customer existence
         CustomerDTO customerDTO = customerServiceClient.getCustomerById(createAccountRequestDTO.getCustomerId());
 
-        String generatedAccountNumber = accountNumberGenerator.generateUniqueAccountNumber();
+        // Generate unique account number
+        AccountType accountType = createAccountRequestDTO.getAccountType();
+        String generatedAccountNumber = accountNumberGenerator.generateUniqueAccountNumber(accountType);
 
+        // Create account from request DTO
         Account newAccount = accountMapper.toAccountFromCreateRequest(createAccountRequestDTO);
         newAccount.setCustomerId(customerDTO.getCustomerId());
-        newAccount.setBalance(BigDecimal.ZERO); // Initial balance is zero
+        newAccount.setBalance(BigDecimal.ZERO);
         newAccount.setCreatedAt(LocalDateTime.now());
         newAccount.setUpdatedAt(LocalDateTime.now());
 
+        // Save the new account to the repository
         Account savedAccount = accountRepository.save(newAccount);
 
+        // Log the account creation event and send notification
         accountAuditLog.logAccountEvent(savedAccount.getAccountId(), "CREATE_ACCOUNT", "New account created");
         accountNotification.sendAccountCreationNotification(savedAccount.getCustomerId(), savedAccount.getAccountId());
 
@@ -60,29 +76,18 @@ public class AccountServiceImpl implements AccountService {
         return savedAccount;
     }
 
+
     @Override
     public Account getAccount(UUID accountId) {
         logger.info("Fetching account with ID: {}", accountId);
         accountVerification.verifyAccountExists(accountId);
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     @Override
     public void closeAccount(UUID accountId) {
-        logger.info("Closing account with ID: {}", accountId);
-
-        // Check if the account exists and close it
-        accountLocking.closeAccount(accountId);
-
-        logger.info("Account closed successfully with ID: {}", accountId);
-
-        // Log the account closure event
-        accountAuditLog.logAccountEvent(accountId, "CLOSE_ACCOUNT", "Account closed");
-
-        // Send a notification about the account closure
-        Account account = accountLocking.getAccount(accountId);
-        accountNotification.sendAccountClosureNotification(account.getCustomerId(), accountId);
+        accountSecurityService.closeAccount(accountId);
     }
 
     @Override
@@ -107,46 +112,23 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
-        logger.info("Transferring funds from account ID: {} to account ID: {}", fromAccountId, toAccountId);
-
-        // Check if the account is locked
-        boolean isAccountLocked = accountLocking.isAccountLocked(fromAccountId);
-        if (isAccountLocked) {
-            logger.error("Account ID: {} is locked", fromAccountId);
-            throw new IllegalStateException("Account is locked due to too many failed attempts");
-        }
-
-
-        // Check if sufficient balance exists in the account
-        boolean hasSufficientBalance = accountBalanceChecker.hasSufficientBalance(fromAccountId, amount);
-        if (!hasSufficientBalance) {
-            logger.error("Insufficient funds in account ID: {}", fromAccountId);
-            throw new InsufficientFundsException("Insufficient funds in account: " + fromAccountId);
-        }
-
-
-        // Proceed with the transaction
-        Account fromAccount = getAccount(fromAccountId);
-        Account toAccount = getAccount(toAccountId);
-
-        fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
-        toAccount.setBalance(toAccount.getBalance().add(amount));
-
-        accountRepository.save(fromAccount);
-        accountRepository.save(toAccount);
-
-        processTransaction(fromAccountId, toAccountId, amount);
-
-        accountAuditLog.logAccountEvent(fromAccountId, "TRANSFER_FUNDS",
-                "Transferred " + amount + " to account " + toAccountId);
-        logger.info("Funds transferred successfully from account ID: {} to account ID: {}", fromAccountId, toAccountId);
+        transactionService.transferFunds(fromAccountId, toAccountId, amount);
+        logger.info("Transaction from account {} to account {} of amount {} processed successfully", fromAccountId, toAccountId, amount);
     }
 
     @Override
     public Account changeAccountType(UUID accountId, AccountType newAccountType) {
         logger.info("Changing account type for account ID: {} to {}", accountId, newAccountType);
         Account account = getAccount(accountId);
+
+        // validate if the account type change is allowed
+        if (!isAccountTypeChangePermissible(account.getAccountType(), newAccountType)) {
+            logger.error("Account type change not allowed from {} to {}", account.getAccountType(), newAccountType);
+            throw new IllegalArgumentException("Account type change not allowed");
+        }
+
         account.setAccountType(newAccountType);
         account.setUpdatedAt(LocalDateTime.now());
         Account updatedAccount = accountRepository.save(account);
@@ -154,32 +136,39 @@ public class AccountServiceImpl implements AccountService {
         return updatedAccount;
     }
 
-    @Override
-    public void setOverdraftProtection(UUID accountId, boolean enabled) {
-        logger.info("Setting overdraft protection for account ID: {} to {}", accountId, enabled);
-        Account account = getAccount(accountId);
-        account.setOverdraftProtection(enabled);
-        account.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(account);
-        logger.info("Overdraft protection set successfully for account ID: {}", accountId);
+    private boolean isAccountTypeChangePermissible(AccountType currentType, AccountType newType) {
+        // Define the permissible account type changes
+        if (currentType == AccountType.CHECKING && newType == AccountType.SAVINGS) {
+            return true;
+        } else if (currentType == AccountType.SAVINGS && newType == AccountType.CHECKING) {
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public void freezeAccount(UUID accountId) {
-        logger.info("Freezing account with ID: {}", accountId);
-        accountLocking.freezeAccount(accountId);
-        logger.info("Account frozen successfully with ID: {}", accountId);
+    public void setOverdraftProtection(UUID accountId, boolean enabled) {
+        logger.info("Setting overdraft protection for account ID: {} to {}", accountId, enabled);
 
-        accountAuditLog.logAccountEvent(accountId, "FREEZE_ACCOUNT", "Account frozen");
+        // Call the overdraft service to enable/disable protection
+        if (enabled) {
+            overdraftService.enableOverdraft(accountId, BigDecimal.valueOf(1000));  // Example overdraft amount
+        } else {
+            overdraftService.disableOverdraft(accountId);
+        }
+
+        logger.info("Overdraft protection set successfully for account ID: {}", accountId);
+    }
+
+
+    @Override
+    public void freezeAccount(UUID accountId) {
+        securityService.freezeAccount(accountId);
     }
 
     @Override
     public void unfreezeAccount(UUID accountId) {
-        logger.info("Unfreezing account with ID: {}", accountId);
-        accountLocking.unfreezeAccount(accountId);
-        logger.info("Account unfrozen successfully with ID: {}", accountId);
-
-        accountAuditLog.logAccountEvent(accountId, "UNFREEZE_ACCOUNT", "Account unfrozen");
+        securityService.unfreezeAccount(accountId);
     }
 
     @Override
@@ -209,43 +198,32 @@ public class AccountServiceImpl implements AccountService {
         return account.getStatus();
     }
 
+    public void withdraw(UUID accountId, BigDecimal amount) {
+        // Validate if the withdrawal is possible, considering overdraft limits
+        overdraftService.validateWithdrawal(accountId, amount);
+
+        // Proceed with the actual withdrawal logic (subtracting from account balance)
+        // For simplicity, we're just updating the balance directly.
+        Account account = accountRepository.findById(accountId).orElseThrow();
+        account.setBalance(account.getBalance().subtract(amount));
+        accountRepository.save(account);
+    }
+
     @Override
     public void setTransactionLimit(UUID accountId, BigDecimal limit) {
-        logger.info("Setting transaction limit for account ID: {} to {}", accountId, limit);
-        Account account = getAccount(accountId);
-        account.setTransactionLimit(limit);
-        account.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(account);
-        logger.info("Transaction limit set successfully for account ID: {}", accountId);
+       accountSecurityService.setTransactionLimit(accountId, limit);
     }
 
     @Override
     public void processTransaction(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
-        logger.info("Processing transaction from account ID: {} to account ID: {} with amount: {}", fromAccountId, toAccountId, amount);
-
-        if (fromAccountId == null || toAccountId == null || amount == null) {
-            logger.error("Transaction data cannot be null");
-            throw new IllegalArgumentException("Transaction data cannot be null");
-        }
-
-        // Create a transaction DTO
-        TransactionDTO transactionDTO = new TransactionDTO();
-        transactionDTO.setFromAccountId(fromAccountId);
-        transactionDTO.setToAccountId(toAccountId);
-        transactionDTO.setAmount(amount);
-
-        // Call the Transaction service using Feign Client
-        transactionFeignClient.createTransaction(transactionDTO);
-
-        accountAuditLog.logAccountEvent(fromAccountId, "PROCESS_TRANSACTION", "Transaction processed");
-        logger.info("Transaction processed successfully from account ID: {} to account ID: {} with amount: {}", fromAccountId, toAccountId, amount);
+        transactionService.transferFunds(fromAccountId, toAccountId, amount);
     }
 
     @Override
     public void linkAccountToCustomer(UUID accountId, UUID customerId) {
         logger.info("Linking account ID: {} to customer ID: {}", accountId, customerId);
         Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("No account found with ID: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
         account.setCustomerId(customerId);
         accountRepository.save(account);
         logger.info("Account ID: {} linked successfully to customer ID: {}", accountId, customerId);
@@ -256,9 +234,9 @@ public class AccountServiceImpl implements AccountService {
         logger.info("Fetching accounts for customer ID: {}", customerId);
         CustomerDTO customerDTO = customerServiceClient.getCustomerById(customerId);
 
-        if (customerDTO == null){
+        if (customerDTO == null) {
             logger.error("No customer found with ID: {}", customerId);
-            throw new AccountNotFoundException("No customer found with ID: " + customerId);
+            throw new AccountNotFoundException(customerId);
         }
         List<Account> accounts = accountRepository.findByCustomerId(customerId);
         logger.info("Found {} accounts for customer ID: {}", accounts.size(), customerId);

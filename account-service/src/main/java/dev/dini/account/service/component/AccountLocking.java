@@ -17,7 +17,7 @@ public class AccountLocking {
 
     private Account findAccountById(UUID accountId) {
         return accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found with ID: " + accountId));
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
     }
 
     public boolean isAccountLocked(UUID accountId) {
