@@ -7,4 +7,9 @@ public enum AccountType {
     LOAN,
     BUSINESS,
     PREMIUM,
+    JOINT,
+    STUDENT,
+    RETIREMENT,
+    FIXED_DEPOSIT,
+
 }

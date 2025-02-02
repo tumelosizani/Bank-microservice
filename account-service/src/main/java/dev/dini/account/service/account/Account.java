@@ -48,6 +48,8 @@ public class Account {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private BigDecimal overdraftLimit = BigDecimal.ZERO;
+
     @Version
     private Integer version;
 
