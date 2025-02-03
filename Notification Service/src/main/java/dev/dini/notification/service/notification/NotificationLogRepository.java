@@ -6,5 +6,4 @@ import java.util.List;
 
 public interface NotificationLogRepository extends MongoRepository<NotificationLog, String> {
     List<NotificationLog> findByStatus(NotificationStatus status);
-
 }

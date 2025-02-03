@@ -7,10 +7,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 public class AccountRepositoryTest {
@@ -28,21 +29,23 @@ public class AccountRepositoryTest {
 
     @Test
     void findByAccountId_withValidId_returnsAccount() {
+        UUID accountId = UUID.randomUUID();
         Account account = new Account();
-        account.setAccountId(1);
-        when(accountRepository.findByAccountId(anyInt())).thenReturn(Optional.of(account));
+        account.setAccountId(accountId);
+        when(accountRepository.findByAccountId(any(UUID.class))).thenReturn(Optional.of(account));
 
-        Optional<Account> result = accountRepository.findByAccountId(1);
+        Optional<Account> result = accountRepository.findByAccountId(accountId);
 
         assertTrue(result.isPresent());
-        assertEquals(1, result.get().getAccountId());
+        assertEquals(accountId, result.get().getAccountId());
     }
 
     @Test
     void findByAccountId_withInvalidId_returnsEmpty() {
-        when(accountRepository.findByAccountId(anyInt())).thenReturn(Optional.empty());
+        UUID accountId = UUID.randomUUID();
+        when(accountRepository.findByAccountId(any(UUID.class))).thenReturn(Optional.empty());
 
-        Optional<Account> result = accountRepository.findByAccountId(999);
+        Optional<Account> result = accountRepository.findByAccountId(accountId);
 
         assertTrue(result.isEmpty());
     }

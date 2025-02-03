@@ -4,6 +4,8 @@ import dev.dini.customerservice.customer.Address;
 import dev.dini.customerservice.customer.KycStatus;
 import lombok.*;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @Data
@@ -12,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 public class UpdateCustomerDTO {
 
-    private Integer customerId;
+    private UUID customerId;
     private String firstname;
     private String lastname;
     private String email;

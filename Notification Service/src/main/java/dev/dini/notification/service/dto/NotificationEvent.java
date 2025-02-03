@@ -1,5 +1,6 @@
 package dev.dini.notification.service.dto;
 
+
 import dev.dini.notification.service.notification.NotificationStatus;
 import dev.dini.notification.service.notification.NotificationType;
 import lombok.Builder;

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-@Document
+@Document(collection = "notification_logs")
 public class NotificationLog {
     @Id
     private String id;
@@ -21,12 +21,4 @@ public class NotificationLog {
     private NotificationStatus status;
     private LocalDateTime timestamp;
     private String errorDetails;
-
-    public void setNotificationType(NotificationType notificationType) {
-        this.type = notificationType;
-    }
-
-    public NotificationType getNotificationType() {
-        return type;
-    }
 }

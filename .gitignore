@@ -1,2 +1,6 @@
 /.idea/
 Notification Service/sendgrid.env
+
+postgres-data
+rabbitmq-data
+

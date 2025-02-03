@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/customers")
@@ -28,14 +29,14 @@ public class CustomerController {
 
     // Create a new customer
     @PostMapping
-    public ResponseEntity<Integer> createCustomer(@RequestBody @Valid CreateCustomerDTO createCustomerDTO) {
-        Integer customerId = customerService.createCustomer(createCustomerDTO);
+    public ResponseEntity<UUID> createCustomer(@RequestBody @Valid CreateCustomerDTO createCustomerDTO) {
+        UUID customerId = customerService.createCustomer(createCustomerDTO);
         return new ResponseEntity<>(customerId, HttpStatus.CREATED);
     }
 
     // Update an existing customer
     @PutMapping("/{customerId}")
-    public ResponseEntity<Void> updateCustomer(@PathVariable Integer customerId,
+    public ResponseEntity<Void> updateCustomer(@PathVariable UUID customerId,
                                                @RequestBody @Valid UpdateCustomerDTO updateCustomerDTO) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
@@ -54,14 +55,14 @@ public class CustomerController {
 
     // Get a customer by ID
     @GetMapping("/{customerId}")
-    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable Integer customerId) {
+    public ResponseEntity<CustomerResponseDTO> getCustomerById(@PathVariable UUID customerId) {
         CustomerResponseDTO customer = customerService.findById(customerId);
         return ResponseEntity.ok(customer);
     }
 
     // Delete a customer
     @DeleteMapping("/{customerId}")
-    public ResponseEntity<Void> deleteCustomer(@PathVariable Integer customerId) {
+    public ResponseEntity<Void> deleteCustomer(@PathVariable UUID customerId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -71,7 +72,7 @@ public class CustomerController {
 
     // Get account details for a customer
     @GetMapping("/{customerId}/accounts/{accountId}")
-    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable Integer customerId, @PathVariable List<Integer> accountId) {
+    public ResponseEntity<AccountDTO> getAccountForCustomer(@PathVariable UUID customerId, @PathVariable UUID accountId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -79,9 +80,19 @@ public class CustomerController {
         return ResponseEntity.ok(accountDTO);
     }
 
+    // Get all accounts for a customer
+    @GetMapping("/{customerId}/accounts")
+    public ResponseEntity<List<AccountDTO>> getAccountsForCustomer(@PathVariable UUID customerId) {
+        if (!customerService.existsByCustomerId(customerId)) {
+            throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
+        }
+        List<AccountDTO> accountDTOs = accountServiceClient.getAccountsByCustomerId(customerId);
+        return ResponseEntity.ok(accountDTOs);
+    }
+
     // Deduct funds from a customer's account
     @PostMapping("/{customerId}/accounts/{accountId}/deduct")
-    public ResponseEntity<Void> deductFunds(@PathVariable Integer customerId, @PathVariable Integer accountId, @RequestParam BigDecimal amount) {
+    public ResponseEntity<Void> deductFunds(@PathVariable UUID customerId, @PathVariable UUID accountId, @RequestParam BigDecimal amount) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -91,7 +102,7 @@ public class CustomerController {
 
     // Add funds to a customer's account
     @PostMapping("/{customerId}/accounts/{accountId}/add")
-    public ResponseEntity<Void> addFunds(@PathVariable Integer customerId, @PathVariable Integer accountId, @RequestParam BigDecimal amount) {
+    public ResponseEntity<Void> addFunds(@PathVariable UUID customerId, @PathVariable UUID accountId, @RequestParam BigDecimal amount) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -101,7 +112,7 @@ public class CustomerController {
 
     // Deactivate a customer
     @PutMapping("/{customerId}/deactivate")
-    public ResponseEntity<Void> deactivateCustomer(@PathVariable Integer customerId) {
+    public ResponseEntity<Void> deactivateCustomer(@PathVariable UUID customerId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -111,7 +122,7 @@ public class CustomerController {
 
     // Activate a customer
     @PutMapping("/{customerId}/activate")
-    public ResponseEntity<Void> activateCustomer(@PathVariable Integer customerId) {
+    public ResponseEntity<Void> activateCustomer(@PathVariable UUID customerId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }
@@ -121,7 +132,7 @@ public class CustomerController {
 
     // Suspend a customer
     @PutMapping("/{customerId}/suspend")
-    public ResponseEntity<Void> suspendCustomer(@PathVariable Integer customerId) {
+    public ResponseEntity<Void> suspendCustomer(@PathVariable UUID customerId) {
         if (!customerService.existsByCustomerId(customerId)) {
             throw new CustomerNotFoundException("Customer with ID " + customerId + " not found");
         }

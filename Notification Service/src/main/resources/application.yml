@@ -1,13 +1,18 @@
 spring:
   config:
-      import: optional:configserver:http://localhost:8888
+    import: optional:configserver:http://localhost:8888
 
 
   application:
       name: notification-service
+
+    name: notification-service
+
+
   data:
     mongodb:
       uri: mongodb://tumelosizani:tumelosizani@localhost:27017/notification-service?authSource=admin
+
 
 twilio:
   accountSid: YOUR_ACCOUNT_SID
@@ -17,3 +22,28 @@ twilio:
 sendgrid:
   api:
     key: YOUR_SENDGRID_API_KEY
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: rabbitmq
+    password: rabbitmq
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2.0
+          max-interval: 10000ms
+
+rabbitmq:
+  queue: notification-queue # Name of the queue
+  exchange: notification-exchange # Name of the exchange
+  routing-key: notification-routing-key # Routing key
+
+  logging:
+    level:
+      root: INFO
+      dev.dini.notification.service: DEBUG # Debug logs for your service
+

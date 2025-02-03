@@ -18,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,19 +53,20 @@ public class AccountServiceImplTest {
     @Test
     void testCreateAccount() {
         // Given
+        UUID customerId = UUID.randomUUID();
         CreateAccountRequestDTO requestDTO = new CreateAccountRequestDTO();
-        requestDTO.setCustomerId(1);
+        requestDTO.setCustomerId(customerId);
 
         CustomerDTO customerDTO = new CustomerDTO();
-        customerDTO.setCustomerId(1);
+        customerDTO.setCustomerId(customerId);
 
         Account account = new Account();
-        account.setCustomerId(1);
+        account.setCustomerId(customerId);
         account.setBalance(BigDecimal.ZERO);
         account.setCreatedAt(LocalDateTime.now());
         account.setUpdatedAt(LocalDateTime.now());
 
-        when(customerServiceClient.getCustomerById(any(Integer.class))).thenReturn(customerDTO);
+        when(customerServiceClient.getCustomerById(any(UUID.class))).thenReturn(customerDTO);
         when(accountMapper.toAccountFromCreateRequest(any(CreateAccountRequestDTO.class))).thenReturn(account);
         when(accountRepository.save(any(Account.class))).thenReturn(account);
 
@@ -81,7 +83,7 @@ public class AccountServiceImplTest {
     @Test
     void testGetAccount() {
         // Given
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         Account account = new Account();
         account.setAccountId(accountId);
 
@@ -98,7 +100,7 @@ public class AccountServiceImplTest {
     @Test
     void testGetAccountNotFound() {
         // Given
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
 
         when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
 
@@ -109,7 +111,7 @@ public class AccountServiceImplTest {
     @Test
     void testCloseAccount() {
         // Given
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         Account account = new Account();
         account.setAccountId(accountId);
 
@@ -125,8 +127,8 @@ public class AccountServiceImplTest {
     @Test
     void testTransferFunds() {
         // Given
-        Integer fromAccountId = 1;
-        Integer toAccountId = 2;
+        UUID fromAccountId = UUID.randomUUID();
+        UUID toAccountId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("100.00");
 
         Account fromAccount = new Account();
@@ -161,8 +163,8 @@ public class AccountServiceImplTest {
     @Test
     void testTransferFundsInsufficientFunds() {
         // Given
-        Integer fromAccountId = 1;
-        Integer toAccountId = 2;
+        UUID fromAccountId = UUID.randomUUID();
+        UUID toAccountId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("200.00");
 
         Account fromAccount = new Account();
@@ -179,7 +181,7 @@ public class AccountServiceImplTest {
     @Test
     void testSetOverdraftProtection() {
         // Given
-        Integer accountId = 1;
+        UUID accountId = UUID.randomUUID();
         boolean enabled = true;
 
         Account account = new Account();

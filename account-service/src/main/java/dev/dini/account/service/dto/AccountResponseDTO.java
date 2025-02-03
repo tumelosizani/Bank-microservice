@@ -7,13 +7,14 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Data
 public class AccountResponseDTO {
-    private Integer accountId;
-    private Integer customerId;
+    private UUID accountId;
+    private UUID customerId;
     private String accountName;
     private BigDecimal balance;
     private AccountType accountType;

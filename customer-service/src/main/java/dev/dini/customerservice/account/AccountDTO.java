@@ -4,12 +4,14 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.UUID;
+
 @Data
 @Getter
 @Setter
 public class AccountDTO {
 
-    private Integer accountId;
+    private UUID accountId;
     private String accountNumber;
     private String accountType;
     private Double balance;

@@ -8,6 +8,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,7 +17,7 @@ import java.util.List;
 @Builder
 public class CustomerResponseDTO {
 
-    private Integer customerId;
+    private UUID customerId;
     private String firstname;
     private String lastname;
     private String email;

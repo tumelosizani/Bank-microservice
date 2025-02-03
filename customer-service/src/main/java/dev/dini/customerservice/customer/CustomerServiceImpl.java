@@ -5,13 +5,16 @@ import dev.dini.customerservice.account.AccountServiceClient;
 import dev.dini.customerservice.dto.CreateCustomerDTO;
 import dev.dini.customerservice.dto.CustomerResponseDTO;
 import dev.dini.customerservice.dto.UpdateCustomerDTO;
+import dev.dini.customerservice.exception.CustomerAlreadyExistsException;
 import dev.dini.customerservice.exception.CustomerNotFoundException;
 import dev.dini.customerservice.mapper.CustomerMapper;
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,18 +31,29 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Integer createCustomer(@Valid CreateCustomerDTO createCustomerDTO) {
+    public UUID createCustomer(@Valid CreateCustomerDTO createCustomerDTO) {
+        // Check if a customer with the same id_number already exists
+        if (customerRepository.existsByIdNumber(createCustomerDTO.getIdNumber())) {
+            throw new CustomerAlreadyExistsException("Customer with the provided ID number already exists.");
+        }
+
         // Map DTO to Customer Entity
         Customer customer = customerMapper.toEntity(createCustomerDTO);
         customer.setCreatedAt(LocalDateTime.now());
-        customer = this.customerRepository.save(customer);
+
+        try {
+            // Save the customer
+            customer = this.customerRepository.save(customer);
+        } catch (DataIntegrityViolationException e) {
+            // Handle exception gracefully
+            throw new IllegalStateException("An error occurred while saving the customer. Please try again later.", e);
+        }
 
         // Call Account Service to link accounts
-        final Customer savedCustomer = customer;
         if (createCustomerDTO.getAccountIds() != null && !createCustomerDTO.getAccountIds().isEmpty()) {
-            createCustomerDTO.getAccountIds().forEach(accountId ->
-                    accountServiceClient.linkAccountToCustomer(accountId, savedCustomer.getCustomerId())
-            );
+            for (UUID accountId : createCustomerDTO.getAccountIds()) {
+                accountServiceClient.linkAccountToCustomer(accountId, customer.getCustomerId());
+            }
         }
 
         return customer.getCustomerId();
@@ -65,7 +79,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public CustomerResponseDTO findById(Integer customerId) {
+    public CustomerResponseDTO findById(UUID customerId) {
         Customer customer = this.customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with ID: " + customerId));
 
@@ -77,17 +91,17 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public boolean existsByCustomerId(Integer customerId) {
+    public boolean existsByCustomerId(UUID customerId) {
         return this.customerRepository.findById(customerId).isPresent();
     }
 
     @Override
-    public void deleteCustomer(Integer customerId) {
+    public void deleteCustomer(UUID customerId) {
         this.customerRepository.deleteById(customerId);
     }
 
     @Override
-    public void deactivateCustomer(Integer customerId) {
+    public void deactivateCustomer(UUID customerId) {
         Customer customer = customerRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided ID: " + customerId));
         customer.setStatus(CustomerStatus.DEACTIVATED);
@@ -95,17 +109,15 @@ public class CustomerServiceImpl implements CustomerService {
         customerRepository.save(customer);
 
         // Optionally update the account status
-        if (customer.getAccountId() != null) {
-            AccountDTO account = accountServiceClient.getAccountById(customer.getAccountId());
-            if (account != null) {
-                account.setStatus("DEACTIVATED");
-                // Save the account update via another service call if necessary
-            }
+        List<AccountDTO> accounts = accountServiceClient.getAccountsByCustomerId(customer.getCustomerId());
+        for (AccountDTO account : accounts) {
+            account.setStatus("DEACTIVATED");
+            // Save the account update via another service call if necessary
         }
     }
 
     @Override
-    public void activateCustomer(Integer customerId) {
+    public void activateCustomer(UUID customerId) {
         Customer customer = customerRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException(String.format("No customer found with the provided ID: %s", customerId)));
         customer.setStatus(CustomerStatus.ACTIVE);
@@ -114,7 +126,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public void suspendCustomer(Integer customerId) {
+    public void suspendCustomer(UUID customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided ID: " + customerId));
         customer.setStatus(CustomerStatus.SUSPENDED);
@@ -145,4 +157,5 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customer -> customerMapper.toResponseDTO((Customer) customer))
                 .orElseThrow(() -> new CustomerNotFoundException("No customer found with the provided phone number: " + phoneNumber));
     }
+
 }
