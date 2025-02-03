@@ -1,4 +1,4 @@
-package dev.dini.notification_service;
+package dev.dini.notification.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

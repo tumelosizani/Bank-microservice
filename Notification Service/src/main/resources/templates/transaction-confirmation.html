@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #28A745;
+        }
+        p {
+            font-size: 16px;
+            color: #333;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Transaction Successful</h2>
+    <p>Hello <span th:text="${customerName}"></span>,</p>
+    <p>Your transaction has been successfully completed. Below are the details:</p>
+
+    <p><strong>Transaction ID:</strong> <span th:text="${transactionId}"></span></p>
+    <p><strong>Type:</strong> <span th:text="${transactionType}"></span></p>
+    <p><strong>Amount:</strong> $<span th:text="${transactionAmount}"></span></p>
+    <p><strong>Balance After Transaction:</strong> $<span th:text="${accountBalance}"></span></p>
+    <p><strong>Status:</strong> <span th:text="${transactionStatus}"></span></p>
+
+    <p>Thank you for banking with us. If you have any questions, please contact our support team.</p>
+
+    <div class="footer">
+        <p>&copy; 2024 Bank Microservice. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>
