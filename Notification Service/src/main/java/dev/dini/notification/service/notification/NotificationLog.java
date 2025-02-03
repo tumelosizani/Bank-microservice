@@ -18,16 +18,7 @@ public class NotificationLog {
     private String recipient;
     private NotificationType type;
     private String message;
-    private String status;
+    private NotificationStatus status;
     private LocalDateTime timestamp;
     private String errorDetails;
-
-    public NotificationLog(String recipient, NotificationType type, String message, String status, LocalDateTime timestamp, String errorDetails) {
-        this.recipient = recipient;
-        this.type = type;
-        this.message = message;
-        this.status = status;
-        this.timestamp = timestamp;
-        this.errorDetails = errorDetails;
-    }
 }

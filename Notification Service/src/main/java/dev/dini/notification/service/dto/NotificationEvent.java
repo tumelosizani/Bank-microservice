@@ -1,5 +1,7 @@
 package dev.dini.notification.service.dto;
 
+
+import dev.dini.notification.service.notification.NotificationStatus;
 import dev.dini.notification.service.notification.NotificationType;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +21,7 @@ public class NotificationEvent {
     private NotificationType type; // Type of notification: EMAIL, SMS, PUSH
     private String message; // The content of the notification
     private LocalDateTime timestamp; // When the event was generated
-    private String status; // Event status: PENDING, SENT, FAILED
+    private NotificationStatus status; // Event status: PENDING, SENT, FAILED
+    private String errorDetails;
 
 }

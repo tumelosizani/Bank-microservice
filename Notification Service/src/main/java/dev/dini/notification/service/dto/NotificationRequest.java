@@ -10,20 +10,11 @@ import lombok.*;
 @NoArgsConstructor
 @Data
 public class NotificationRequest {
-
     private String recipient; // Email or phone number
     private NotificationType type;      // EMAIL or SMS
     private String message;   // Message content
 
-    public String getRecipient() {
-        return recipient;
-    }
-
-    public NotificationType getType() {
+    public NotificationType getNotificationType() {
         return type;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }

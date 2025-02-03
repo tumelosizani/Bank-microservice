@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Created Successfully</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #28A745;
+        }
+        p {
+            font-size: 16px;
+            color: #333;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Welcome to Our Bank!</h2>
+    <p>Dear <span th:text="${customerName}"></span>,</p>
+    <p>Your new bank account has been successfully created.</p>
+
+    <p><strong>Account Number:</strong> <span th:text="${accountNumber}"></span></p>
+    <p><strong>Account Type:</strong> <span th:text="${accountType}"></span></p>
+    <p><strong>Balance:</strong> $<span th:text="${accountBalance}"></span></p>
+
+    <p>Thank you for choosing our services. If you have any questions, feel free to reach out.</p>
+
+    <div class="footer">
+        <p>&copy; 2024 Bank Microservice. All rights reserved.</p>
+    </div>
+</div>
+</body>
+</html>
