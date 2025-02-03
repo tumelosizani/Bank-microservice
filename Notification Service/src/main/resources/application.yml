@@ -38,9 +38,9 @@ sendgrid:
           max-interval: 10000ms
 
 rabbitmq:
-  queue: notification-queue # Name of the queue
-  exchange: notification-exchange # Name of the exchange
-  routing-key: notification-routing-key # Routing key
+  # Name of the queue
+  # Name of the exchange
+  # Routing key
 
   logging:
     level:
