@@ -27,4 +27,12 @@ public class AccountNotificationService {
         // Correctly use account.getAccountId() instead of accountId
         sendNotification(account.getAccountId(), "Interest of " + interest + " applied to account: " + account.getAccountId());
     }
+
+    public void sendOverdraftProtectionNotification(@NotNull UUID customerId, UUID accountId, boolean enabled) {
+        sendNotification(accountId, "Overdraft protection " + (enabled ? "enabled" : "disabled") + " for customer: " + customerId + ", Account ID: " + accountId);
+    }
+
+    public void sendTransactionLimitNotification(@NotNull UUID customerId, UUID accountId, BigDecimal limit) {
+        sendNotification(accountId, "Transaction limit set to " + limit + " for customer: " + customerId + ", Account ID: " + accountId);
+    }
 }

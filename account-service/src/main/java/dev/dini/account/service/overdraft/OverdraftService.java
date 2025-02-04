@@ -47,14 +47,14 @@ public class OverdraftService {
         if (accountBalance.compareTo(amount) < 0) {
             if (account.getOverdraftLimit().compareTo(BigDecimal.ZERO) <= 0) {
                 // If no overdraft protection is available, throw exception
-                throw new InsufficientFundsException("Insufficient funds and overdraft protection is not enabled.");
+                throw new InsufficientFundsException(accountId);
             }
 
             // Calculate the available overdraft amount
             BigDecimal totalAvailableFunds = accountBalance.add(account.getOverdraftLimit());
 
             if (totalAvailableFunds.compareTo(amount) < 0) {
-                throw new InsufficientFundsException("Insufficient funds including overdraft protection.");
+                throw new InsufficientFundsException(accountId);
             }
 
             // Deduct from the overdraft limit if necessary

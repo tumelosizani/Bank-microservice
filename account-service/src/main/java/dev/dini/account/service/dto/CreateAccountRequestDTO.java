@@ -2,15 +2,15 @@ package dev.dini.account.service.dto;
 
 import dev.dini.account.service.account.AccountStatus;
 import dev.dini.account.service.account.AccountType;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
 @Getter
 @Setter
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateAccountRequestDTO {
 
     private UUID customerId;           // The user ID associated with the account

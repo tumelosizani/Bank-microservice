@@ -1,202 +1,339 @@
 package dev.dini.account.service.account;
 
-import dev.dini.account.service.customer.CustomerDTO;
-import dev.dini.account.service.customer.CustomerServiceClient;
-import dev.dini.account.service.dto.CreateAccountRequestDTO;
+import dev.dini.account.service.dto.*;
 import dev.dini.account.service.exception.AccountNotFoundException;
 import dev.dini.account.service.exception.InsufficientFundsException;
-import dev.dini.account.service.mapper.AccountMapper;
-import dev.dini.account.service.transaction.TransactionDTO;
-import dev.dini.account.service.transaction.TransactionFeignClient;
+import dev.dini.account.service.interest.InterestCalculationService;
+import dev.dini.account.service.transaction.TransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class AccountServiceImplTest {
+class AccountServiceImplTest {
 
     @Mock
     private AccountRepository accountRepository;
 
     @Mock
-    private AccountMapper accountMapper;
+    private AccountManagementService accountManagementService;
 
     @Mock
-    private TransactionFeignClient transactionFeignClient;
+    private AccountInfoService accountInfoService;
 
     @Mock
-    private CustomerServiceClient customerServiceClient;
+    private TransactionService transactionService;
+
+    @Mock
+    private InterestCalculationService interestCalculationService;
 
     @InjectMocks
     private AccountServiceImpl accountServiceImpl;
 
     @BeforeEach
-    void setUp() {
-        try (AutoCloseable mocks = MockitoAnnotations.openMocks(this)) {
-            // Initialization code
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    void initNewMocks() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testCreateAccount() {
+    void createAccountSuccessfully() {
         // Given
-        UUID customerId = UUID.randomUUID();
         CreateAccountRequestDTO requestDTO = new CreateAccountRequestDTO();
-        requestDTO.setCustomerId(customerId);
-
-        CustomerDTO customerDTO = new CustomerDTO();
-        customerDTO.setCustomerId(customerId);
-
-        Account account = new Account();
-        account.setCustomerId(customerId);
-        account.setBalance(BigDecimal.ZERO);
-        account.setCreatedAt(LocalDateTime.now());
-        account.setUpdatedAt(LocalDateTime.now());
-
-        when(customerServiceClient.getCustomerById(any(UUID.class))).thenReturn(customerDTO);
-        when(accountMapper.toAccountFromCreateRequest(any(CreateAccountRequestDTO.class))).thenReturn(account);
-        when(accountRepository.save(any(Account.class))).thenReturn(account);
+        Account expectedAccount = new Account();
+        when(accountManagementService.createAccount(requestDTO)).thenReturn(expectedAccount);
 
         // When
         Account result = accountServiceImpl.createAccount(requestDTO);
 
         // Then
         assertNotNull(result);
-        assertEquals(customerDTO.getCustomerId(), result.getCustomerId());
-        assertEquals(BigDecimal.ZERO, result.getBalance());
-        verify(accountRepository, times(1)).save(account);
+        assertEquals(expectedAccount, result);
+        verify(accountManagementService, times(1)).createAccount(requestDTO);
     }
 
     @Test
-    void testGetAccount() {
+    void getAccountSuccessfully() {
         // Given
         UUID accountId = UUID.randomUUID();
-        Account account = new Account();
-        account.setAccountId(accountId);
-
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+        Account expectedAccount = new Account();
+        when(accountInfoService.getAccount(accountId)).thenReturn(expectedAccount);
 
         // When
         Account result = accountServiceImpl.getAccount(accountId);
 
         // Then
         assertNotNull(result);
-        assertEquals(accountId, result.getAccountId());
+        assertEquals(expectedAccount, result);
+        verify(accountInfoService, times(1)).getAccount(accountId);
     }
 
     @Test
-    void testGetAccountNotFound() {
+    void getAccountNotFound() {
         // Given
         UUID accountId = UUID.randomUUID();
-
-        when(accountRepository.findById(accountId)).thenReturn(Optional.empty());
+        when(accountInfoService.getAccount(accountId)).thenThrow(new AccountNotFoundException(accountId));
 
         // When / Then
         assertThrows(AccountNotFoundException.class, () -> accountServiceImpl.getAccount(accountId));
     }
 
     @Test
-    void testCloseAccount() {
+    void closeAccountSuccessfully() {
         // Given
         UUID accountId = UUID.randomUUID();
-        Account account = new Account();
-        account.setAccountId(accountId);
-
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
+        doNothing().when(accountManagementService).closeAccount(accountId);
 
         // When
         accountServiceImpl.closeAccount(accountId);
 
         // Then
-        verify(accountRepository, times(1)).delete(account);
+        verify(accountManagementService, times(1)).closeAccount(accountId);
     }
 
     @Test
-    void testTransferFunds() {
+    void closeAccountNotFound() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        doThrow(new AccountNotFoundException(accountId)).when(accountManagementService).closeAccount(accountId);
+
+        // When / Then
+        assertThrows(AccountNotFoundException.class, () -> accountServiceImpl.closeAccount(accountId));
+    }
+
+    @Test
+    void transferFundsSuccessfully() {
         // Given
         UUID fromAccountId = UUID.randomUUID();
         UUID toAccountId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("100.00");
 
-        Account fromAccount = new Account();
-        fromAccount.setAccountId(fromAccountId);
-        fromAccount.setBalance(new BigDecimal("200.00"));
-
-        Account toAccount = new Account();
-        toAccount.setAccountId(toAccountId);
-        toAccount.setBalance(new BigDecimal("50.00"));
-
-        when(accountRepository.findById(fromAccountId)).thenReturn(Optional.of(fromAccount));
-        when(accountRepository.findById(toAccountId)).thenReturn(Optional.of(toAccount));
-        when(accountRepository.save(any(Account.class))).thenReturn(fromAccount).thenReturn(toAccount);
+        doNothing().when(transactionService).transferFunds(fromAccountId, toAccountId, amount);
 
         // When
         accountServiceImpl.transferFunds(fromAccountId, toAccountId, amount);
 
         // Then
-        assertEquals(new BigDecimal("100.00"), fromAccount.getBalance());
-        assertEquals(new BigDecimal("150.00"), toAccount.getBalance());
-        verify(accountRepository, times(2)).save(any(Account.class));
-
-        ArgumentCaptor<TransactionDTO> transactionCaptor = ArgumentCaptor.forClass(TransactionDTO.class);
-        verify(transactionFeignClient, times(1)).createTransaction(transactionCaptor.capture());
-
-        TransactionDTO transactionDTO = transactionCaptor.getValue();
-        assertEquals(fromAccountId, transactionDTO.getFromAccountId());
-        assertEquals(toAccountId, transactionDTO.getToAccountId());
-        assertEquals(amount, transactionDTO.getAmount());
+        verify(transactionService, times(1)).transferFunds(fromAccountId, toAccountId, amount);
     }
 
     @Test
-    void testTransferFundsInsufficientFunds() {
+    void transferFundsInsufficientFunds() {
         // Given
         UUID fromAccountId = UUID.randomUUID();
         UUID toAccountId = UUID.randomUUID();
         BigDecimal amount = new BigDecimal("200.00");
 
-        Account fromAccount = new Account();
-        fromAccount.setAccountId(fromAccountId);
-        fromAccount.setBalance(new BigDecimal("100.00"));
-
-        when(accountRepository.findById(fromAccountId)).thenReturn(Optional.of(fromAccount));
-        when(accountRepository.findById(toAccountId)).thenReturn(Optional.of(new Account()));
+        doThrow(new InsufficientFundsException(fromAccountId)).when(transactionService).transferFunds(fromAccountId, toAccountId, amount);
 
         // When / Then
         assertThrows(InsufficientFundsException.class, () -> accountServiceImpl.transferFunds(fromAccountId, toAccountId, amount));
     }
 
     @Test
-    void testSetOverdraftProtection() {
+    void setOverdraftProtectionSuccessfully() {
         // Given
         UUID accountId = UUID.randomUUID();
         boolean enabled = true;
-
-        Account account = new Account();
-        account.setAccountId(accountId);
-
-        when(accountRepository.findById(accountId)).thenReturn(Optional.of(account));
-        when(accountRepository.save(any(Account.class))).thenReturn(account);
+        doNothing().when(accountManagementService).setOverdraftProtection(accountId, enabled);
 
         // When
         accountServiceImpl.setOverdraftProtection(accountId, enabled);
 
         // Then
-        assertTrue(account.isOverdraftProtection());
-        verify(accountRepository, times(1)).save(account);
+        verify(accountManagementService, times(1)).setOverdraftProtection(accountId, enabled);
     }
 
-    // Add more tests for other methods as needed
+    @Test
+    void getBalanceSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        BigDecimal expectedBalance = new BigDecimal("123.45");
+        when(accountInfoService.getBalance(accountId)).thenReturn(expectedBalance);
+
+        // When
+        BigDecimal actualBalance = accountServiceImpl.getBalance(accountId);
+
+        // Then
+        assertEquals(expectedBalance, actualBalance);
+        verify(accountInfoService, times(1)).getBalance(accountId);
+    }
+
+    @Test
+    void updateAccountSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        AccountRequestDTO requestDTO = new AccountRequestDTO();
+        AccountResponseDTO expectedResponse = new AccountResponseDTO();
+        when(accountManagementService.updateAccount(accountId, requestDTO)).thenReturn(expectedResponse);
+
+        // When
+        AccountResponseDTO result = accountServiceImpl.updateAccount(accountId, requestDTO);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(accountManagementService, times(1)).updateAccount(accountId, requestDTO);
+    }
+
+    @Test
+    void changeAccountTypeSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        AccountType newType = AccountType.CHECKING;
+        Account expectedAccount = new Account();
+        expectedAccount.setAccountType(newType);
+        when(accountManagementService.changeAccountType(accountId, newType)).thenReturn(expectedAccount);
+
+        // When
+        Account actualAccount = accountServiceImpl.changeAccountType(accountId, newType);
+
+        // Then
+        assertEquals(newType, actualAccount.getAccountType());
+        verify(accountManagementService, times(1)).changeAccountType(accountId, newType);
+    }
+
+    @Test
+    void freezeAccountSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+
+        // When
+        accountServiceImpl.freezeAccount(accountId);
+
+        // Then
+        verify(accountManagementService, times(1)).freezeAccount(accountId);
+    }
+
+    @Test
+    void unfreezeAccountSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+
+        // When
+        accountServiceImpl.unfreezeAccount(accountId);
+
+        // Then
+        verify(accountManagementService, times(1)).unfreezeAccount(accountId);
+    }
+
+    @Test
+    void addAccountHolderSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+
+        // When
+        accountServiceImpl.addAccountHolder(accountId, customerId);
+
+        // Then
+        verify(accountManagementService, times(1)).addAccountHolder(accountId, customerId);
+    }
+
+    @Test
+    void removeAccountHolderSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+
+        // When
+        accountServiceImpl.removeAccountHolder(accountId, customerId);
+
+        // Then
+        verify(accountManagementService, times(1)).removeAccountHolder(accountId, customerId);
+    }
+
+    @Test
+    void checkAccountStatusSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        AccountStatus expectedStatus = AccountStatus.ACTIVE;
+        when(accountInfoService.checkAccountStatus(accountId)).thenReturn(expectedStatus);
+
+        // When
+        AccountStatus actualStatus = accountServiceImpl.checkAccountStatus(accountId);
+
+        // Then
+        assertEquals(expectedStatus, actualStatus);
+        verify(accountInfoService, times(1)).checkAccountStatus(accountId);
+    }
+
+    @Test
+    void setTransactionLimitSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        BigDecimal limit = new BigDecimal("5000");
+
+        // When
+        accountServiceImpl.setTransactionLimit(accountId, limit);
+
+        // Then
+        verify(accountManagementService, times(1)).setTransactionLimit(accountId, limit);
+    }
+
+    @Test
+    void processTransactionSuccessfully() {
+        // Given
+        UUID fromAccountId = UUID.randomUUID();
+        UUID toAccountId = UUID.randomUUID();
+        BigDecimal amount = new BigDecimal("1000");
+
+        // When
+        accountServiceImpl.processTransaction(fromAccountId, toAccountId, amount);
+
+        // Then
+        verify(transactionService, times(1)).transferFunds(fromAccountId, toAccountId, amount);
+    }
+
+    @Test
+    void linkAccountToCustomerSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+
+        // When
+        accountServiceImpl.linkAccountToCustomer(accountId, customerId);
+
+        // Then
+        verify(accountManagementService, times(1)).linkAccountToCustomer(accountId, customerId);
+    }
+
+    @Test
+    void getAccountsByCustomerIdSuccessfully() {
+        // Given
+        UUID customerId = UUID.randomUUID();
+        List<Account> expectedAccounts = List.of(new Account(), new Account());
+        when(accountInfoService.getAccountsByCustomerId(customerId)).thenReturn(expectedAccounts);
+
+        // When
+        List<Account> actualAccounts = accountServiceImpl.getAccountsByCustomerId(customerId);
+
+        // Then
+        assertEquals(expectedAccounts.size(), actualAccounts.size());
+        verify(accountInfoService, times(1)).getAccountsByCustomerId(customerId);
+    }
+
+    @Test
+    void calculateInterestSuccessfully() {
+        // Given
+        UUID accountId = UUID.randomUUID();
+        InterestCalculationRequestDTO request = new InterestCalculationRequestDTO();
+        request.setAccountId(accountId);
+        InterestCalculationResponseDTO response = new InterestCalculationResponseDTO();
+        when(interestCalculationService.calculateInterest(request)).thenReturn(response);
+
+        // When
+        InterestCalculationResponseDTO result = accountServiceImpl.calculateInterest(request);
+
+        // Then
+        verify(interestCalculationService, times(1)).calculateInterest(request);
+        assertEquals(response, result);
+    }
 }
