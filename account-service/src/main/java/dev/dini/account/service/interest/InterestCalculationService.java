@@ -3,6 +3,9 @@ package dev.dini.account.service.interest;
 import dev.dini.account.service.account.Account;
 import dev.dini.account.service.account.AccountRepository;
 import dev.dini.account.service.account.AccountType;
+import dev.dini.account.service.dto.InterestCalculationRequestDTO;
+import dev.dini.account.service.dto.InterestCalculationResponseDTO;
+import dev.dini.account.service.exception.AccountNotFoundException;
 import dev.dini.account.service.notification.AccountNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -29,12 +33,44 @@ public class InterestCalculationService {
     @Value("${interest.rate}")
     private BigDecimal interestRate;
 
+    public InterestCalculationResponseDTO calculateInterest(InterestCalculationRequestDTO request) {
+        UUID accountId = request.getAccountId();
+        logger.info("Calculating interest for account ID: {}", accountId);
+
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException(accountId));
+
+        BigDecimal interestRate = getInterestRateForAccount(account);
+        BigDecimal interestAmount = account.getBalance().multiply(interestRate);
+
+        // Updating the account balance with the calculated interest
+        account.setBalance(account.getBalance().add(interestAmount));
+        accountRepository.save(account);
+
+        logger.info("Interest calculated successfully for account ID: {}. Interest amount: {}", accountId, interestAmount);
+
+        // Returning the response DTO
+        return new InterestCalculationResponseDTO(accountId, interestAmount);
+    }
+
+    private BigDecimal getInterestRateForAccount(Account account) {
+        // Example logic for determining interest rate based on account type
+        switch (account.getAccountType()) {
+            case SAVINGS:
+                return new BigDecimal("0.03"); // 3% interest rate for savings accounts
+            case CHECKING:
+                return new BigDecimal("0.01"); // 1% interest rate for checking accounts
+            default:
+                return BigDecimal.ZERO;
+        }
+    }
+
     // Helper method to calculate interest
     private BigDecimal calculateInterestAmount(Account account) {
-        if (account.getBalance() != null) {
+        if (account.getBalance() != null && interestRate != null) {
             return account.getBalance().multiply(interestRate);
         } else {
-            logger.warn("Account ID: {} has a null balance", account.getAccountId());
+            logger.warn("Account ID: {} has a null balance or interest rate", account.getAccountId());
             return BigDecimal.ZERO;
         }
     }
@@ -67,7 +103,6 @@ public class InterestCalculationService {
         }
     }
 
-
     // Reuse the helper method in the normal interest calculation
     public BigDecimal calculateInterest(Account account) {
         return calculateInterestAmount(account);
@@ -80,7 +115,6 @@ public class InterestCalculationService {
         interestHistory.setTimestamp(LocalDateTime.now());
         interestHistoryRepository.save(interestHistory);
     }
-
 
     private BigDecimal calculateCompoundInterestAmount(Account account) {
         BigDecimal monthlyRate = interestRate.divide(BigDecimal.valueOf(12), RoundingMode.HALF_UP);
@@ -98,6 +132,4 @@ public class InterestCalculationService {
     public BigDecimal previewInterestApplication(Account account) {
         return calculateInterestAmount(account).divide(BigDecimal.valueOf(12), RoundingMode.HALF_UP);
     }
-
-
 }

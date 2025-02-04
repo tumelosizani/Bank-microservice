@@ -4,6 +4,7 @@ import dev.dini.account.service.account.Account;
 import dev.dini.account.service.account.AccountRepository;
 import dev.dini.account.service.audit.AccountAuditService;
 import dev.dini.account.service.exception.AccountNotFoundException;
+import dev.dini.account.service.security.AccountSecurityService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +23,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionFeignClient transactionFeignClient;
     private final AccountAuditService accountAuditService;
+    private final AccountSecurityService accountSecurityService;
 
     @Transactional
     public void transferFunds(UUID fromAccountId, UUID toAccountId, BigDecimal amount) {
@@ -65,4 +67,9 @@ public class TransactionService {
 
         logger.info("Transaction processed successfully from account ID: {} to account ID: {} with amount: {}", fromAccountId, toAccountId, amount);
     }
+
+    public void setTransactionLimit(UUID accountId, BigDecimal limit) {
+        accountSecurityService.setTransactionLimit(accountId, limit);
+    }
+
 }

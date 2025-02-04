@@ -1,14 +1,14 @@
 package dev.dini.account.service.customer;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
 @Getter
 @Setter
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CustomerDTO {
 
     private UUID customerId;    // The unique ID of the customer

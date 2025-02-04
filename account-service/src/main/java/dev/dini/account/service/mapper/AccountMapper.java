@@ -18,4 +18,6 @@ public interface AccountMapper {
 
     // Map Account entity to AccountResponseDTO after update
     AccountResponseDTO toAccountResponseDTOAfterUpdate(Account updatedAccount);
+
+    AccountResponseDTO toAccountResponseDTO(Account account);
 }
